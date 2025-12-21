@@ -1,7 +1,7 @@
 const quizData = [
     {
         type: 'image',
-        question: "Где настоящий Cэм Альтман",
+        question: "Где настоящий Cэм Альтман?",
         options: [
             "assets/img_1.jpg",
             "assets/img_2.jpg",
@@ -60,7 +60,6 @@ function startGame() {
         console.log("Music started playing");
     }).catch(e => {
         console.error("Music play failed:", e);
-        // Пытаемся запустить еще раз принудительно, если проблема в автоплее
         if(e.name === 'NotAllowedError') {
              alert("Пожалуйста, нажмите на экран, чтобы включить музыку");
              document.body.addEventListener('click', () => {
@@ -113,7 +112,6 @@ function checkAnswer(idx) {
     } else {
         wrongSnd.currentTime = 0;
         wrongSnd.play().catch(e => console.error(e));
-        alert("Неправильно! Попробуйте еще раз.");
     }
 }
 
