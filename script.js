@@ -1,8 +1,13 @@
 const quizData = [
     {
-        type: 'text',
-        question: "Какой язык программирования используется для веб-страниц?",
-        options: ["Java", "Python", "JavaScript", "C++"],
+        type: 'image',
+        question: "Где настоящий Cэм Альтман",
+        options: [
+            "assets/img_1.jpg",
+            "assets/img_2.jpg",
+            "assets/img_3.jpg",
+            "assets/img_4.jpg"
+        ],
         correct: 2
     },
     {
