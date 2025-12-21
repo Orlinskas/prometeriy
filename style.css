@@ -30,7 +30,7 @@ body {
 #menu-screen {
     background: #001f3f;
     border-radius: 15px;
-    border: 2px solid #ffd700;
+    border: 2px solid #3ca069;
     padding: 30px;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     height: auto;
@@ -40,12 +40,12 @@ body {
 #menu-screen h1 {
     font-size: 3em;
     margin-bottom: 40px;
-    color: #ffd700;
+    color: #3ca069;
 }
 
 #start-btn {
     padding: 20px 40px;
-    background: #ffd700;
+    background: #3ca069;
     color: #000;
     font-weight: bold;
     font-size: 24px;
@@ -98,7 +98,7 @@ body {
 
 .option-item:hover {
     transform: scale(1.02);
-    border-color: #ffd700;
+    border-color: #3ca069;
 }
 
 .option-item:active {
@@ -123,7 +123,7 @@ body {
     background: rgba(0, 31, 63, 0.9);
     padding: 20px;
     border-radius: 15px;
-    border: 2px solid #ffd700;
+    border: 2px solid #3ca069;
     width: 100%;
     box-sizing: border-box;
 }
