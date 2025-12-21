@@ -4,7 +4,7 @@ const quizData = [
         question: "Где настоящий Cэм Альтман?",
         options: [
             "assets/img_1.jpg",
-            "assets/img_2.jpg",
+            "assets/img_2.png",
             "assets/img_3.jpg",
             "assets/img_4.jpg"
         ],
