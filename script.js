@@ -50,8 +50,19 @@ function startGame() {
     menuScreen.classList.add('hidden');
     gameScreen.classList.remove('hidden');
 
-    bgMusic.volume = 0.3;
-    bgMusic.play().catch(e => console.log(e));
+    bgMusic.volume = 0.5;
+    bgMusic.play().then(() => {
+        console.log("Music started playing");
+    }).catch(e => {
+        console.error("Music play failed:", e);
+        // Пытаемся запустить еще раз принудительно, если проблема в автоплее
+        if(e.name === 'NotAllowedError') {
+             alert("Пожалуйста, нажмите на экран, чтобы включить музыку");
+             document.body.addEventListener('click', () => {
+                 bgMusic.play();
+             }, { once: true });
+        }
+    });
     
     currentStep = 0;
     loadQuestion();
