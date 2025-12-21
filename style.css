@@ -153,3 +153,37 @@ body {
         padding: 10px;
     }
 }
+
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto; /* Разрешаем скролл */
+        align-items: flex-start; /* Прижимаем к верху при скролле */
+    }
+
+    .screen {
+        height: auto;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
+    #game-screen {
+        padding: 10px;
+    }
+
+    #options-container {
+        grid-template-columns: 1fr; /* Одна колонка */
+        grid-template-rows: auto;
+        height: auto;
+    }
+
+    .option-item {
+        min-height: 200px; /* Минимальная высота карточки */
+    }
+
+    #question-container {
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
+        border-top: 1px solid #3ca069;
+    }
+}
