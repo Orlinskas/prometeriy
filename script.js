@@ -8,6 +8,17 @@ const quizData = [
             "assets/img_3.jpg",
             "assets/img_4.jpg"
         ],
+        correct: 1
+    },
+    {
+        type: 'image',
+        question: "Где настоящая Скарлетт Йоханссон?",
+        options: [
+            "assets/img_6.jpg",
+            "assets/img_7.webp",
+            "assets/img_8.webp",
+            "assets/img_5.jpg"
+        ],
         correct: 3
     },
     {
