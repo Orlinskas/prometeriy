@@ -1,0 +1,138 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #1a1a1a;
+    font-family: 'Arial', sans-serif;
+    color: #fff;
+    overflow: hidden;
+}
+
+.screen {
+    width: 100%;
+    max-width: 800px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: opacity 0.5s ease;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#menu-screen {
+    background: #001f3f;
+    border-radius: 15px;
+    border: 2px solid #ffd700;
+    padding: 30px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    height: auto;
+    min-height: 300px;
+}
+
+#menu-screen h1 {
+    font-size: 3em;
+    margin-bottom: 40px;
+    color: #ffd700;
+}
+
+#start-btn {
+    padding: 20px 40px;
+    background: #ffd700;
+    color: #000;
+    font-weight: bold;
+    font-size: 24px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    text-transform: uppercase;
+}
+
+#start-btn:hover {
+    background: #ffeb3b;
+    transform: scale(1.05);
+}
+
+#start-btn:active {
+    transform: scale(0.95);
+}
+
+#game-screen {
+    justify-content: space-between;
+    padding: 20px;
+}
+
+#options-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    flex-grow: 1;
+    margin-bottom: 20px;
+}
+
+.option-item {
+    background: #2c3e50;
+    border-radius: 15px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+}
+
+.option-item:hover {
+    transform: scale(1.02);
+    border-color: #ffd700;
+}
+
+.option-item:active {
+    transform: scale(0.98);
+}
+
+.option-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.option-item span {
+    font-size: 1.5em;
+    font-weight: bold;
+    padding: 20px;
+}
+
+#question-container {
+    background: rgba(0, 31, 63, 0.9);
+    padding: 20px;
+    border-radius: 15px;
+    border: 2px solid #ffd700;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#question {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+@media (max-height: 600px) {
+    #options-container {
+        gap: 10px;
+    }
+    #question {
+        font-size: 1.2em;
+    }
+}
