@@ -14,40 +14,23 @@ const quizData = [
         type: 'image',
         question: "Где настоящая Скарлетт Йоханссон?",
         options: [
-            "assets/img_6.jpg",
+            "assets/img_6.webp",
             "assets/img_7.webp",
+            "assets/img_5.jpg",
             "assets/img_8.webp",
-            "assets/img_5.jpg"
         ],
-        correct: 3
+        correct: 2
     },
     {
         type: 'text',
         question: "Что означает CSS?",
-        options: ["Computer Style Sheets", "Cascading Style Sheets", "Creative Style Sheets", "Colorful Style Sheets"],
-        correct: 1
-    },
-    {
-        type: 'image',
-        question: "Где изображен логотип HTML5?",
         options: [
-            "https://placehold.co/400x400/orange/white?text=HTML5",
-            "https://placehold.co/400x400/blue/white?text=CSS3",
-            "https://placehold.co/400x400/yellow/black?text=JS",
-            "https://placehold.co/400x400/green/white?text=Node"
+            "Экономика делает движение вверх, и население испытывает большую радость от событий. Власти осуществляют деятельность для улучшения жизни людей в текущем периоде времени.", 
+            "Правительство утвердило новый пакет реформ, направленных на стабилизацию ситуации в регионе. Эксперты уверены, что принятые меры помогут улучшить благосостояние граждан уже в ближайшем будущем.",
+            "Разразившийся в кулуарах кризис грозит не просто перекроить политическую карту, а стать точкой невозврата для всей действующей администрации. То, что вчера казалось рядовым скандалом, сегодня рискует обрушить многолетние репутации за считаные часы.", 
+            "Возмутительно, когда один человек может отнять у другого его труд, деньги, корову, лошадь, может отнять даже его сына, дочь, — это возмутительно, но насколько возмутительнее то, что может один человек отнять у другого его душу, может заставить его сделать то, что губит его духовное «я», лишает его его духовного блага."
         ],
-        correct: 0
-    },
-    {
-        type: 'image',
-        question: "Выберите кота",
-        options: [
-            "https://placehold.co/400x400/red/white?text=Собака",
-            "https://placehold.co/400x400/purple/white?text=Кот",
-            "https://placehold.co/400x400/brown/white?text=Хомяк",
-            "https://placehold.co/400x400/gray/white?text=Попугай"
-        ],
-        correct: 1
+        correct: 3
     }
 ];
 
