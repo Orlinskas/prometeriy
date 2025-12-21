@@ -8,7 +8,7 @@ const quizData = [
             "assets/img_3.jpg",
             "assets/img_4.jpg"
         ],
-        correct: 2
+        correct: 3
     },
     {
         type: 'text',
