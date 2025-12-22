@@ -22,6 +22,15 @@ const quizData = [
         correct: 2
     },
     {
+        type: 'sound',
+        question: "Где настоящий голос Скарлетт Йоханссон?",
+        options: [
+            "assets/voice_2.mp3",
+            "assets/voice_1.mp3",
+        ],
+        correct: 0
+    },
+    {
         type: 'text',
         question: "Какой текст написан человеком?",
         options: [
@@ -35,6 +44,7 @@ const quizData = [
 ];
 
 let currentStep = 0;
+let currentPreviewAudio = null;
 
 const correctSnd = document.getElementById('sound-correct');
 const wrongSnd = document.getElementById('sound-wrong');
@@ -76,27 +86,73 @@ function loadQuestion() {
     questionEl.textContent = data.question;
     optionsContainer.innerHTML = '';
 
+    if (currentPreviewAudio) {
+        currentPreviewAudio.pause();
+        currentPreviewAudio = null;
+    }
+
+    if (data.type === 'sound') {
+        bgMusic.volume = 0.1;
+    } else {
+        bgMusic.volume = 0.5;
+    }
+
     data.options.forEach((option, index) => {
-        const item = document.createElement('div');
-        item.classList.add('option-item');
-        item.onclick = () => checkAnswer(index);
+        if (data.type === 'sound') {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('option-wrapper');
 
-        if (data.type === 'image') {
-            const img = document.createElement('img');
-            img.src = option;
-            img.alt = `Option ${index + 1}`;
-            item.appendChild(img);
+            const item = document.createElement('div');
+            item.classList.add('option-item');
+            
+            const icon = document.createElement('div');
+            icon.classList.add('play-icon');
+            icon.textContent = '▶';
+            item.appendChild(icon);
+
+            item.onclick = () => {
+                if (currentPreviewAudio) {
+                    currentPreviewAudio.pause();
+                    currentPreviewAudio.currentTime = 0;
+                }
+                currentPreviewAudio = new Audio(option);
+                currentPreviewAudio.play().catch(e => console.error("Audio play failed", e));
+            };
+
+            const btn = document.createElement('button');
+            btn.textContent = 'Выбрать';
+            btn.classList.add('select-btn');
+            btn.onclick = () => checkAnswer(index);
+
+            wrapper.appendChild(item);
+            wrapper.appendChild(btn);
+            optionsContainer.appendChild(wrapper);
         } else {
-            const text = document.createElement('span');
-            text.textContent = option;
-            item.appendChild(text);
-        }
+            const item = document.createElement('div');
+            item.classList.add('option-item');
+            item.onclick = () => checkAnswer(index);
 
-        optionsContainer.appendChild(item);
+            if (data.type === 'image') {
+                const img = document.createElement('img');
+                img.src = option;
+                img.alt = `Option ${index + 1}`;
+                item.appendChild(img);
+            } else {
+                const text = document.createElement('span');
+                text.textContent = option;
+                item.appendChild(text);
+            }
+
+            optionsContainer.appendChild(item);
+        }
     });
 }
 
 function checkAnswer(idx) {
+    if (currentPreviewAudio) {
+        currentPreviewAudio.pause();
+    }
+
     if (idx === quizData[currentStep].correct) {
         correctSnd.currentTime = 0;
         correctSnd.play().catch(e => console.error(e));
@@ -120,4 +176,8 @@ function returnToMenu() {
     currentStep = 0;
     bgMusic.pause();
     bgMusic.currentTime = 0;
+    if (currentPreviewAudio) {
+        currentPreviewAudio.pause();
+        currentPreviewAudio = null;
+    }
 }

@@ -140,6 +140,35 @@ body {
     letter-spacing: 0.5px;
 }
 
+.option-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    min-height: 0;
+}
+
+.play-icon {
+    font-size: 4em;
+    color: #ffffff;
+}
+
+.select-btn {
+    padding: 10px;
+    background: #000000;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+    cursor: pointer;
+    font-family: 'IBM Plex Serif', serif;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.select-btn:hover {
+    background: #ffffff;
+    color: #000000;
+}
+
 /* Адаптив */
 @media (max-height: 600px) {
     #options-container {
