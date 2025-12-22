@@ -16,7 +16,7 @@ const quizData = [
         options: [
             "assets/img_6.webp",
             "assets/img_7.webp",
-            "assets/img_5.jpg",
+            "assets/img_5.webp",
             "assets/img_8.webp",
         ],
         correct: 2
