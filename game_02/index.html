@@ -14,7 +14,7 @@
         <div id="ui-layer">
             <div id="start-screen" class="screen active">
                 <h1>VIBE_CODER_v1.0</h1>
-                <p class="subtitle">> кодинг чисто на интуиции...</p>
+                <p class="subtitle">> </p>
                 <div class="controls">
                     <p>[ПРОБЕЛ] или [ТАП] чтобы задеплоить</p>
                 </div>
@@ -31,11 +31,22 @@
                 <button id="restart-btn" class="retro-btn">rm -rf && retry</button>
             </div>
 
+            <div id="win-screen" class="screen hidden">
+                <h1 style="color: #4ec9b0; text-shadow: 0 0 10px #4ec9b0;">УСПЕШНЫЙ ДЕПЛОЙ!</h1>
+                <p class="subtitle" style="color: #fff; margin-bottom: 1rem;">Вы прошли игру (100 коммитов)</p>
+                <p style="font-size: 1.1rem; color: gold; margin-bottom: 2rem;">🎁 Для игрока есть подарок, сделай скриншот и напиши в редакцию!</p>
+                <div class="score-board">
+                    <p>Финальный Вайб: <span id="win-score">100</span></p>
+                </div>
+                <button id="win-restart-btn" class="retro-btn">Начать заново</button>
+            </div>
+
             <div id="hud" class="hidden">
                 <span class="score-display">коммиты: <span id="current-score">0</span></span>
             </div>
         </div>
     </div>
+    <script src="audio.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

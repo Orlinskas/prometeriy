@@ -9,6 +9,9 @@ let bestScore = localStorage.getItem('vibe_best_score') || 0;
 let obstacles = [];
 let particles = [];
 let speed = 3;
+let isInvincible = false; // God mode cheat
+let tempInvincibleTimer = 0; // Timer for cake powerup
+let cakes = [];
 
 // Assets / Config
 const GRAVITY = 0.25;
@@ -31,11 +34,11 @@ const DEATH_MESSAGES = [
     "Забыл await в асинхронной функции",
     "CSS не центрируется",
     "ChatGPT перегружен запросами",
-    "Сокращение штата в отделе вайба",
+    "Сокращение штата в отделе вайб-разработки",
     "Твой триальный период закончился"
 ];
 
-const PLAYER_EMOJIS = ['🧑‍💻', '✨', '☕', '🚀', '🔮'];
+const PLAYER_EMOJIS = ['🧑‍💻', '🧑‍💻', '🧑‍💻', '🧑‍💻', '🧑‍💻'];
 let currentEmoji = PLAYER_EMOJIS[0];
 
 // Resize handling
@@ -63,12 +66,26 @@ class VibeCoder {
         ctx.font = '60px Arial'; // Doubled font size
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+        
         // Rotate slightly based on velocity for "dynamics"
         ctx.save();
         ctx.translate(this.x, this.y);
+        
+        // God Mode Aura
+        if (isInvincible || tempInvincibleTimer > 0) {
+            ctx.shadowBlur = 20;
+            // Gold for permanent cheat, Rainbow/Pink for temporary cake
+            ctx.shadowColor = (tempInvincibleTimer > 0) ? `hsl(${frames * 5}, 100%, 50%)` : "gold";
+        }
+
         let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
         ctx.rotate(angle);
-        ctx.fillText(currentEmoji, 0, 0);
+        
+        let displayEmoji = currentEmoji;
+        if (isInvincible) displayEmoji = '😎';
+        else if (tempInvincibleTimer > 0) displayEmoji = '🦄'; 
+        
+        ctx.fillText(displayEmoji, 0, 0);
         ctx.restore();
     }
 
@@ -79,7 +96,7 @@ class VibeCoder {
         // Floor collision
         if (this.y + this.radius >= canvas.height) {
             this.y = canvas.height - this.radius;
-            gameOver("Упал на дно (Выгорание)");
+            if (!isInvincible) gameOver("Упал на дно (Выгорание)");
         }
         
         // Ceiling collision
@@ -190,6 +207,32 @@ class Obstacle {
     }
 }
 
+class Cake {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.size = 40;
+        this.collected = false;
+    }
+
+    update() {
+        this.x -= speed;
+    }
+
+    draw() {
+        if (this.collected) return;
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🍰', this.x, this.y);
+        
+        // Glow effect
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#FF69B4'; // HotPink
+        ctx.shadowBlur = 0; // Reset
+    }
+}
+
 class Particle {
     constructor(x, y) {
         this.x = x;
@@ -237,18 +280,42 @@ function initGame() {
     frames = 0;
     obstacles = [];
     particles = [];
+    cakes = []; // Reset cakes
+    tempInvincibleTimer = 0; // Reset powerup
     currentEmoji = '🧑‍💻';
     
     document.getElementById('current-score').innerText = score;
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('game-over-screen').classList.add('hidden');
+    document.getElementById('win-screen').classList.add('hidden'); // Hide win screen
     document.getElementById('hud').classList.remove('hidden');
     
+    startAudio(); // Start the music
     loop();
+}
+
+function gameWin() {
+    gameState = 'GAMEOVER'; // Stop game loop
+    stopAudio();
+    lastGameOverTime = Date.now();
+
+    // Save Score (100)
+    if(score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('vibe_best_score', bestScore);
+    }
+
+    // Show Win Screen
+    document.getElementById('hud').classList.add('hidden');
+    document.getElementById('win-screen').classList.remove('hidden');
+    document.getElementById('win-score').innerText = score;
+    
+    // Play a "Win" sound? (Optional, maybe just silence or existing stopAudio)
 }
 
 function gameOver(reason) {
     gameState = 'GAMEOVER';
+    stopAudio(); // Stop music
     lastGameOverTime = Date.now();
     
     // Save Score
@@ -294,7 +361,44 @@ function loop() {
 
     // Manage Obstacles
     if (frames % SPAWN_RATE === 0) {
-        obstacles.push(new Obstacle());
+        const obs = new Obstacle();
+        obstacles.push(obs);
+        
+        // 20% chance to spawn a cake in the gap
+        if (Math.random() < 0.2) {
+            // Position cake in the middle of the gap
+            const cakeY = obs.topHeight + obs.gap / 2;
+            // Position cake slightly after the pipe starts so it looks centered horizontally
+            const cakeX = obs.x + obs.width / 2;
+            cakes.push(new Cake(cakeX, cakeY));
+        }
+    }
+
+    // Manage Cakes
+    for (let i = 0; i < cakes.length; i++) {
+        let cake = cakes[i];
+        cake.update();
+        cake.draw();
+
+        // Collision with Cake
+        // Simple circle collision
+        const dist = Math.hypot(player.x - cake.x, player.y - cake.y);
+        if (dist < player.radius + cake.size/2 && !cake.collected) {
+            cake.collected = true;
+            tempInvincibleTimer = 300; // 5 seconds at 60fps
+            createParticles(cake.x, cake.y); // Confetti!
+        }
+
+        // Remove off-screen
+        if (cake.x < -50 || cake.collected) {
+            cakes.splice(i, 1);
+            i--;
+        }
+    }
+
+    // Update Temp Invincibility
+    if (tempInvincibleTimer > 0) {
+        tempInvincibleTimer--;
     }
 
     for (let i = 0; i < obstacles.length; i++) {
@@ -303,23 +407,26 @@ function loop() {
         obs.draw();
 
         // Collision Check
-        const hitBox = player.radius * 0.6; // Forgiving hitbox for the emoji shape
-        
-        // Top Pipe
-        if (
-            player.x + hitBox > obs.x && 
-            player.x - hitBox < obs.x + obs.width &&
-            player.y - hitBox < obs.topHeight
-        ) {
-            gameOver();
-        }
-        // Bottom Pipe
-        if (
-            player.x + hitBox > obs.x && 
-            player.x - hitBox < obs.x + obs.width &&
-            player.y + hitBox > obs.topHeight + obs.gap
-        ) {
-            gameOver();
+        // Invincible if Cheat OR Cake Timer is active
+        if (!isInvincible && tempInvincibleTimer <= 0) {
+            const hitBox = player.radius * 0.6; // Forgiving hitbox for the emoji shape
+            
+            // Top Pipe
+            if (
+                player.x + hitBox > obs.x && 
+                player.x - hitBox < obs.x + obs.width &&
+                player.y - hitBox < obs.topHeight
+            ) {
+                gameOver();
+            }
+            // Bottom Pipe
+            if (
+                player.x + hitBox > obs.x && 
+                player.x - hitBox < obs.x + obs.width &&
+                player.y + hitBox > obs.topHeight + obs.gap
+            ) {
+                gameOver();
+            }
         }
 
         // Score update
@@ -329,6 +436,11 @@ function loop() {
             document.getElementById('current-score').innerText = score;
             // Increase difficulty slightly
             if(score % 5 === 0) speed += 0.2;
+
+            // WIN CONDITION
+            if (score >= 100) {
+                gameWin();
+            }
         }
 
         // Remove off-screen
@@ -360,8 +472,8 @@ function handleInput(e) {
     // If it's a keyboard event, only accept Space
     if (e.type === 'keydown' && e.code !== 'Space') return;
     
-    // If it's a touch/click event on a button, let the button handler do it to avoid double triggers
-    if (e.target.tagName === 'BUTTON') return;
+    // If it's a touch/click event on a button or the Title (cheat), ignore
+    if (e.target.tagName === 'BUTTON' || e.target.tagName === 'H1') return;
 
     e.preventDefault();
 
@@ -390,6 +502,29 @@ document.getElementById('restart-btn').addEventListener('click', (e) => {
     e.stopPropagation(); 
     initGame();
 });
+document.getElementById('win-restart-btn').addEventListener('click', (e) => {
+    e.stopPropagation(); 
+    initGame();
+});
+
+// CHEAT CODE: Click Title 5 times
+let titleClicks = 0;
+const titleElement = document.querySelector('#start-screen h1');
+
+function triggerCheat(e) {
+    e.stopPropagation();
+    e.preventDefault(); // Prevent default to stop mouse emulation if touch
+    titleClicks++;
+    if (titleClicks === 5) {
+        isInvincible = !isInvincible;
+        alert(isInvincible ? "GOD MODE: ON (You are Senior Architect now)" : "GOD MODE: OFF");
+        titleClicks = 0;
+    }
+}
+
+titleElement.addEventListener('click', triggerCheat);
+titleElement.addEventListener('touchstart', triggerCheat);
+titleElement.addEventListener('mousedown', triggerCheat);
 
 // Initial Draw
 ctx.fillStyle = COLORS.bg;
