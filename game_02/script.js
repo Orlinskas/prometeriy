@@ -73,9 +73,14 @@ class VibeCoder {
         
         // God Mode Aura
         if (isInvincible || tempInvincibleTimer > 0) {
-            ctx.shadowBlur = 20;
-            // Gold for permanent cheat, Rainbow/Pink for temporary cake
-            ctx.shadowColor = (tempInvincibleTimer > 0) ? `hsl(${frames * 5}, 100%, 50%)` : "gold";
+            // Replaced expensive shadowBlur with a drawn circle
+            ctx.save();
+            ctx.fillStyle = (tempInvincibleTimer > 0) ? `hsl(${frames * 5}, 100%, 50%)` : "gold";
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
         }
 
         let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, (this.velocity * 0.1)));
@@ -224,12 +229,14 @@ class Cake {
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🍰', this.x, this.y);
         
-        // Glow effect
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#FF69B4'; // HotPink
-        ctx.shadowBlur = 0; // Reset
+        // Simple glow (circle behind) instead of expensive shadowBlur
+        ctx.fillStyle = 'rgba(255, 105, 180, 0.3)'; // HotPink transparent
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size/1.5, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillText('🍰', this.x, this.y);
     }
 }
 
@@ -251,8 +258,8 @@ class Particle {
         this.x += this.speedX;
         this.y += this.speedY;
         
-        // Fade out very slowly
-        this.life -= 0.005; 
+        // Fade out faster for performance (was 0.005)
+        this.life -= 0.02; 
     }
     draw() {
         ctx.font = `${this.size}px Arial`;
@@ -354,8 +361,8 @@ function loop() {
     player.update();
     player.draw();
 
-    // Constant Poop Trail
-    if (frames % 5 === 0) {
+    // Constant Poop Trail (Reduced frequency for performance)
+    if (frames % 15 === 0) {
         particles.push(new Particle(player.x, player.y));
     }
 
