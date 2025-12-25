@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Coder: Продакшн Ран</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="ui-layer">
+            <div id="start-screen" class="screen active">
+                <h1>VIBE_CODER_v1.0</h1>
+                <p class="subtitle">> кодинг чисто на интуиции...</p>
+                <div class="controls">
+                    <p>[ПРОБЕЛ] или [ТАП] чтобы задеплоить</p>
+                </div>
+                <button id="start-btn" class="retro-btn">git push --force</button>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <h1 class="error-text">ОШИБКА В ПРОДЕ</h1>
+                <p id="death-reason">Uncaught Exception: Реальность полна багов</p>
+                <div class="score-board">
+                    <p>Коммитов: <span id="final-score">0</span></p>
+                    <p>Рекорд: <span id="best-score">0</span></p>
+                </div>
+                <button id="restart-btn" class="retro-btn">rm -rf && retry</button>
+            </div>
+
+            <div id="hud" class="hidden">
+                <span class="score-display">коммиты: <span id="current-score">0</span></span>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
