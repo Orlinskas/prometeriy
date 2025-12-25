@@ -73,12 +73,12 @@ class VibeCoder {
         
         // God Mode Aura
         if (isInvincible || tempInvincibleTimer > 0) {
-            // Replaced expensive shadowBlur with a drawn circle
+            // Performance: Use simple circle instead of shadowBlur
             ctx.save();
             ctx.fillStyle = (tempInvincibleTimer > 0) ? `hsl(${frames * 5}, 100%, 50%)` : "gold";
             ctx.globalAlpha = 0.3;
             ctx.beginPath();
-            ctx.arc(0, 0, 30, 0, Math.PI * 2);
+            ctx.arc(0, 0, 35, 0, Math.PI * 2);
             ctx.fill();
             ctx.restore();
         }
@@ -230,11 +230,13 @@ class Cake {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // Simple glow (circle behind) instead of expensive shadowBlur
-        ctx.fillStyle = 'rgba(255, 105, 180, 0.3)'; // HotPink transparent
+        // Performance: Simple glow circle
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 105, 180, 0.4)'; // HotPink glow
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size/1.5, 0, Math.PI*2);
+        ctx.arc(this.x, this.y, 25, 0, Math.PI * 2);
         ctx.fill();
+        ctx.restore();
 
         ctx.fillText('🍰', this.x, this.y);
     }
@@ -259,7 +261,7 @@ class Particle {
         this.y += this.speedY;
         
         // Fade out faster for performance (was 0.005)
-        this.life -= 0.02; 
+        this.life -= 0.015; 
     }
     draw() {
         ctx.font = `${this.size}px Arial`;
@@ -361,8 +363,8 @@ function loop() {
     player.update();
     player.draw();
 
-    // Constant Poop Trail (Reduced frequency for performance)
-    if (frames % 15 === 0) {
+    // Constant Poop Trail
+    if (frames % 10 === 0) { // Reduced frequency (was 5)
         particles.push(new Particle(player.x, player.y));
     }
 
