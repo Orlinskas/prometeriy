@@ -4,19 +4,20 @@ const ctx = canvas.getContext('2d');
 // Game State
 let gameState = 'START'; // START, PLAYING, GAMEOVER
 let frames = 0;
+let lastTime = 0; // For Delta Time
 let score = 0;
 let bestScore = localStorage.getItem('vibe_best_score') || 0;
 let obstacles = [];
 let particles = [];
-let speed = 3;
+let speed = 3; // Hardcore Speed
 let isInvincible = false; // God mode cheat
 let tempInvincibleTimer = 0; // Timer for cake powerup
 let cakes = [];
 
 // Assets / Config
-const GRAVITY = 0.25;
-const JUMP = -6;
-const SPAWN_RATE = 160; // Increased spacing (was 120)
+const GRAVITY = 0.5; // Heavy gravity
+const JUMP = -9.0; // Stronger jump (was -6.5) to help climb steep pipes
+const SPAWN_RATE = 100; // Dense pipes
 const COLORS = {
     bg: '#1e1e1e',
     player: '#4ec9b0',
@@ -94,9 +95,9 @@ class VibeCoder {
         ctx.restore();
     }
 
-    update() {
-        this.velocity += GRAVITY;
-        this.y += this.velocity;
+    update(dt) {
+        this.velocity += GRAVITY * dt;
+        this.y += this.velocity * dt;
 
         // Floor collision
         if (this.y + this.radius >= canvas.height) {
@@ -125,7 +126,7 @@ class Obstacle {
     constructor() {
         this.x = canvas.width;
         this.width = 80; // Wider for better visibility
-        this.gap = 240; 
+        this.gap = 220; 
         this.topHeight = Math.random() * (canvas.height - this.gap - 100) + 50;
         this.passed = false;
         
@@ -207,8 +208,8 @@ class Obstacle {
         ctx.restore();
     }
 
-    update() {
-        this.x -= speed;
+    update(dt) {
+        this.x -= speed * dt;
     }
 }
 
@@ -220,8 +221,8 @@ class Cake {
         this.collected = false;
     }
 
-    update() {
-        this.x -= speed;
+    update(dt) {
+        this.x -= speed * dt;
     }
 
     draw() {
@@ -252,16 +253,16 @@ class Particle {
         this.speedY = Math.random() * 2 - 1;
         this.life = 1.0; 
     }
-    update() {
+    update(dt) {
         // Move with the world (speed is the global game speed)
-        this.x -= speed; 
+        this.x -= speed * dt; 
         
         // Add local drift
-        this.x += this.speedX;
-        this.y += this.speedY;
+        this.x += this.speedX * dt;
+        this.y += this.speedY * dt;
         
         // Fade out faster for performance (was 0.005)
-        this.life -= 0.015; 
+        this.life -= 0.015 * dt; 
     }
     draw() {
         ctx.font = `${this.size}px Arial`;
@@ -300,7 +301,8 @@ function initGame() {
     document.getElementById('hud').classList.remove('hidden');
     
     startAudio(); // Start the music
-    loop();
+    lastTime = performance.now();
+    loop(lastTime);
 }
 
 function gameWin() {
@@ -343,8 +345,21 @@ function gameOver(reason) {
     document.getElementById('game-over-screen').classList.remove('hidden');
 }
 
-function loop() {
+let spawnTimer = 0;
+let particleTimer = 0;
+
+function loop(currentTime) {
     if(gameState !== 'PLAYING') return;
+
+    // First frame initialization if needed
+    if (!lastTime) lastTime = currentTime;
+
+    // Delta Time Calculation
+    const deltaTime = (currentTime - lastTime) / (1000 / 60); // 1.0 at 60fps
+    lastTime = currentTime;
+    
+    // Safety cap for dt (prevent huge jumps if tab was backgrounded)
+    const dt = Math.min(deltaTime, 3);
 
     // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -354,22 +369,28 @@ function loop() {
     ctx.lineWidth = 0.5;
     for(let i=0; i<canvas.width; i+=50) {
         ctx.beginPath();
-        ctx.moveTo(i - (frames % 50), 0);
-        ctx.lineTo(i - (frames % 50), canvas.height);
+        // Shift grid based on time
+        let offset = (Date.now() / 20) % 50; 
+        ctx.moveTo(i - offset, 0);
+        ctx.lineTo(i - offset, canvas.height);
         ctx.stroke();
     }
 
     // Update Player
-    player.update();
+    player.update(dt);
     player.draw();
 
-    // Constant Poop Trail
-    if (frames % 10 === 0) { // Reduced frequency (was 5)
+    // Constant Poop Trail (Time based)
+    particleTimer += dt;
+    if (particleTimer >= 10) { // Equivalent to frames % 10 at 60fps
         particles.push(new Particle(player.x, player.y));
+        particleTimer = 0;
     }
 
     // Manage Obstacles
-    if (frames % SPAWN_RATE === 0) {
+    spawnTimer += dt;
+    if (spawnTimer >= SPAWN_RATE) {
+        spawnTimer = 0;
         const obs = new Obstacle();
         obstacles.push(obs);
         
@@ -386,11 +407,10 @@ function loop() {
     // Manage Cakes
     for (let i = 0; i < cakes.length; i++) {
         let cake = cakes[i];
-        cake.update();
+        cake.update(dt);
         cake.draw();
 
         // Collision with Cake
-        // Simple circle collision
         const dist = Math.hypot(player.x - cake.x, player.y - cake.y);
         if (dist < player.radius + cake.size/2 && !cake.collected) {
             cake.collected = true;
@@ -407,12 +427,12 @@ function loop() {
 
     // Update Temp Invincibility
     if (tempInvincibleTimer > 0) {
-        tempInvincibleTimer--;
+        tempInvincibleTimer -= dt;
     }
 
     for (let i = 0; i < obstacles.length; i++) {
         let obs = obstacles[i];
-        obs.update();
+        obs.update(dt);
         obs.draw();
 
         // Collision Check
@@ -461,7 +481,7 @@ function loop() {
 
     // Particles
     for (let i = 0; i < particles.length; i++) {
-        particles[i].update();
+        particles[i].update(dt);
         particles[i].draw();
         if (particles[i].life <= 0) {
             particles.splice(i, 1);
