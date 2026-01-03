@@ -23,7 +23,7 @@ const quizData = [
     },
     {
         type: 'sound',
-        question: "Где настоящий голос Скарлетт Йоханссон?",
+        question: "Где настоящий голос Скарлетт Йоханссон? Один из вариантов - тот самый голос Sky из раннего ChatGPT.",
         options: [
             "assets/voice_2.mp3",
             "assets/voice_1.mp3",
