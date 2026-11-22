@@ -116,6 +116,24 @@ function kick(time, vol = 0.3, dest = masterGain) {
     osc.stop(time + 0.25);
 }
 
+// Бубенцы: короткий высокий шум и несколько звенящих обертонов вразнобой
+function jingle(time, vol = 0.03, dest = masterGain) {
+    if (!audioCtx) return;
+    noise(time, 0.07, vol, 'highpass', 7000, dest);
+    for (let i = 0; i < 3; i++) {
+        const t = time + Math.random() * 0.02;
+        tone(3000 + Math.random() * 3500, t, 0.05 + Math.random() * 0.04, 'sine', vol * 0.45, 0, dest);
+    }
+}
+
+// Колокольчик: основной тон и неровные обертоны, как у металлической пластинки
+function bell(freq, time, vol = 0.04, dest = masterGain) {
+    if (!audioCtx) return;
+    tone(freq, time, 1.2, 'sine', vol, 0, dest);
+    tone(freq * 2.76, time, 0.5, 'sine', vol * 0.4, 0, dest);
+    tone(freq * 5.4, time, 0.2, 'sine', vol * 0.2, 0, dest);
+}
+
 // --- МУЗЫКА ---
 // Чем больше мира разрушено, тем бодрее и торжественнее музыка.
 // Под конец она начинает фальшивить, но улыбаться не перестаёт.
@@ -129,6 +147,13 @@ function scheduleStep(step, time) {
 
     // Слой 1: «укулеле» — есть всегда
     tone(freq * 2, time, 0.22, 'triangle', 0.05, detune, musicGain);
+
+    // Новогодний слой — есть всегда: бубенцы на каждую восьмую (на слабых долях громче)
+    // и колокольчик в начале каждого такта
+    jingle(time, s % 2 === 1 ? 0.028 : 0.016, musicGain);
+    if (s === 0) {
+        bell(chord.notes[0] * 4, time, 0.03, musicGain);
+    }
 
     // Слой 2: бас и бочка
     if (musicIntensity > 0.12 && (s === 0 || s === 4)) {
@@ -147,8 +172,8 @@ function scheduleStep(step, time) {
     }
 
     // Слой 5: колокольчики успеха
-    if (musicIntensity > 0.7 && (s === 0 || s === 3 || s === 6)) {
-        tone(chord.notes[2] * 4, time, 0.35, 'sine', 0.035, detune, musicGain);
+    if (musicIntensity > 0.7 && (s === 3 || s === 6)) {
+        bell(chord.notes[2] * 4 * Math.pow(2, detune / 1200), time, 0.03, musicGain);
     }
 }
 
@@ -254,6 +279,15 @@ function sfxGavel() {
         tone(180, t + d, 0.09, 'square', 0.08);
         noise(t + d, 0.05, 0.1, 'lowpass', 1200);
     });
+}
+
+// Пролетает Санта: звон бубенцов упряжки
+function sfxSleigh() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    for (let i = 0; i < 10; i++) {
+        jingle(t + i * 0.08 + Math.random() * 0.02, 0.05 - i * 0.004);
+    }
 }
 
 // Грустный тромбон: уа‑уа‑уа‑уаааа

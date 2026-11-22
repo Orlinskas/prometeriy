@@ -37,6 +37,18 @@ const ENEMY_SPAWN_MAX = 660;   // …к концу игры сокращаетс
 const ENEMY_HITBOX = 0.6;      // доля радиуса риска, которая «ловит» мяч
 const ENEMY_SECOND_AT = 0.7;   // с какой доли разрушенного мира рисков может быть двое
 
+// Новый год
+const SNOW_CAP = 4;            // высота снежной шапки над блоком
+const SANTA_LINES = [
+    'Подарки сгенерированы ИИ',
+    'Эльфы оптимизированы',
+    'Санта теперь ИИ‑агент',
+    'Письма Санте читает модель',
+    'Ёлку нарисовала нейросеть',
+    'Доставка подарков: бета‑версия',
+    'С Новым годом от ИИ‑КОРП!'
+];
+
 // Мир сверху вниз. Мяч сначала бьёт нижние ряды, поэтому внизу мелочи, наверху главное.
 // style — форма блока: бумажка, окно сайта, бейдж сотрудника, табличка, толпа.
 const ROWS = [
@@ -152,6 +164,9 @@ let lastEndTime = 0;
 let lastProtectedPopup = 0;
 let isMonopoly = false; // чит
 let pointerX = null;
+let snow = [];
+let santa = null;
+let santaTimer = 360; // первый Санта — через ~6 секунд
 const keys = { left: false, right: false };
 
 const paddle = { x: 0, y: 0, w: 100, h: 16 };
@@ -257,6 +272,7 @@ function resize() {
     canvas.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     layout(oldW, oldH);
+    makeSnow();
 }
 
 function layout(oldW, oldH) {
@@ -422,7 +438,8 @@ function buildBricks() {
                     ? Array.from({ length: 60 }, () => ({ emoji: pick(CROWD), order: Math.random() }))
                     : null,
                 sprite: null,
-                dirty: true
+                dirty: true,
+                snowSeed: Math.random() * 10
             });
         });
     });
@@ -574,6 +591,126 @@ function enemyHit(e) {
     loseBall(e.type.reason);
 }
 
+// --- НОВЫЙ ГОД: снег, Санта, колпак ---
+
+function makeSnow() {
+    const count = Math.round((W * H) / 6000);
+    snow = Array.from({ length: count }, () => ({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: 0.8 + Math.random() * 1.8,
+        vy: 0.3 + Math.random() * 0.7,
+        phase: Math.random() * Math.PI * 2
+    }));
+}
+
+function updateSnow(dt) {
+    for (const f of snow) {
+        f.phase += 0.02 * dt;
+        f.y += f.vy * dt;
+        f.x += Math.sin(f.phase) * 0.3 * dt;
+        if (f.y > H + 3) {
+            f.y = -3;
+            f.x = Math.random() * W;
+        }
+        if (f.x < -3) f.x = W + 3;
+        else if (f.x > W + 3) f.x = -3;
+    }
+}
+
+function drawSnow() {
+    // Два слоя: мелкие дальние снежинки бледнее, крупные ближние ярче
+    ctx.fillStyle = '#ffffff';
+    for (const near of [false, true]) {
+        ctx.globalAlpha = near ? 0.75 : 0.35;
+        ctx.beginPath();
+        for (const f of snow) {
+            if ((f.r > 1.7) !== near) continue;
+            ctx.moveTo(f.x + f.r, f.y);
+            ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function makeSanta(text) {
+    ctx.font = `700 11px ${FONT}`;
+    return {
+        x: W + 10,
+        y: HUD_HEIGHT + 14, // полоса неба между шапкой и клиентами
+        size: 22,
+        text,
+        bannerW: ctx.measureText(text).width + 14,
+        speed: Math.max(1.2, W / 360),
+        age: 0
+    };
+}
+
+function updateSanta(dt) {
+    if (!santa) {
+        santaTimer -= dt;
+        const canFly = gameState === 'START' || gameState === 'SERVE' || gameState === 'PLAYING';
+        if (santaTimer <= 0 && canFly) {
+            santa = makeSanta(pick(SANTA_LINES));
+            santaTimer = 1500 + Math.random() * 1200; // следующий через 25–45 секунд
+            sfxSleigh();
+        }
+        return;
+    }
+    santa.age += dt;
+    santa.x -= santa.speed * dt;
+    if (santa.x + santa.size * 3.2 + 14 + santa.bannerW < -10) santa = null;
+}
+
+function drawSanta() {
+    if (!santa) return;
+    const s = santa.size;
+    const y = santa.y + Math.sin(santa.age * 0.08) * 3;
+
+    // Упряжка летит влево: олени впереди, Санта сзади
+    ctx.font = `${s}px ${EMOJI_FONT}`;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000';
+    ctx.fillText('🦌', santa.x, y + Math.sin(santa.age * 0.08 + 1) * 2);
+    ctx.fillText('🦌', santa.x + s * 1.05, y);
+    ctx.fillText('🎅', santa.x + s * 2.2, y);
+
+    // Корпоративный баннер на верёвке
+    const ropeX = santa.x + s * 3.2;
+    const bannerX = ropeX + 14;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(ropeX, y);
+    ctx.lineTo(bannerX, y);
+    ctx.stroke();
+    ctx.fillStyle = COLORS.corp;
+    ctx.fillRect(bannerX, y - 8, santa.bannerW, 16);
+    ctx.fillStyle = '#000000';
+    ctx.font = `700 11px ${FONT}`;
+    ctx.fillText(santa.text, bannerX + 7, y + 1);
+}
+
+// Новогодний колпак на нейросети
+function drawSantaHat(x, y, r) {
+    const baseY = y - r * 0.8;
+    ctx.fillStyle = '#d62828';
+    ctx.beginPath();
+    ctx.moveTo(x - r * 0.8, baseY);
+    ctx.quadraticCurveTo(x - r * 0.2, y - r * 2.3, x + r * 1.05, y - r * 1.75);
+    ctx.lineTo(x + r * 0.8, baseY);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(x - r * 0.95, baseY - r * 0.16, r * 1.9, r * 0.34);
+    ctx.beginPath();
+    ctx.arc(x + r * 1.05, y - r * 1.75, r * 0.24, 0, Math.PI * 2);
+    ctx.fill();
+}
+
 // --- GAME FLOW ---
 
 function initGame() {
@@ -666,6 +803,10 @@ function gameWin() {
     lastEndTime = Date.now();
     saveBest();
     sfxWin();
+
+    // Финальный пролёт Санты
+    santa = makeSanta('Дарить подарки тоже некому');
+    sfxSleigh();
 
     document.getElementById('win-score').innerText = formatCap(score);
     hudEl.classList.add('hidden');
@@ -864,6 +1005,8 @@ function update(dt) {
     }
 
     updateEnemies(dt);
+    updateSnow(dt);
+    updateSanta(dt);
 
     for (const b of bricks) {
         if (b.flash > 0) b.flash -= dt;
@@ -938,15 +1081,43 @@ function drawChart() {
 function renderBrickSprite(b) {
     if (!b.sprite) b.sprite = document.createElement('canvas');
     const c = b.sprite;
+    // Сверху запас под снежную шапку: она лежит в зазоре между рядами и не влияет на столкновения
     c.width = Math.max(1, Math.ceil(b.w * DPR));
-    c.height = Math.max(1, Math.ceil(b.h * DPR));
+    c.height = Math.max(1, Math.ceil((b.h + SNOW_CAP) * DPR));
     const g = c.getContext('2d');
-    g.setTransform(DPR, 0, 0, DPR, 0, 0);
-    g.clearRect(0, 0, b.w, b.h);
+    g.setTransform(DPR, 0, 0, DPR, 0, SNOW_CAP * DPR);
+    g.clearRect(0, -SNOW_CAP, b.w, b.h + SNOW_CAP);
     drawBrickBody(g, b);
     if (b.boss) drawCrowdContent(g, b);
     else drawBrickContent(g, b);
+    drawSnowCap(g, b);
     b.dirty = false;
+}
+
+// Снежная шапка: неровный сугроб по верхнему краю блока
+function drawSnowCap(g, b) {
+    const start = 3;
+    const end = b.style === 'paper' ? b.w - Math.min(9, b.h * 0.3) - 1 : b.w - 3;
+    g.beginPath();
+    g.moveTo(start, 1.5);
+    g.lineTo(start, 0);
+    for (let x = start; x <= end; x += 2) {
+        const lump = 1.5 + 2.5 * Math.abs(Math.sin(x * 0.16 + b.snowSeed));
+        g.lineTo(x, -Math.min(lump, SNOW_CAP));
+    }
+    g.lineTo(end, 0);
+    g.lineTo(end, 1.5);
+    g.closePath();
+    g.fillStyle = '#ffffff';
+    g.fill();
+
+    // Лёгкая голубая тень под снегом
+    g.strokeStyle = 'rgba(140, 175, 215, 0.7)';
+    g.lineWidth = 1;
+    g.beginPath();
+    g.moveTo(start, 2);
+    g.lineTo(end, 2);
+    g.stroke();
 }
 
 function drawBrickBody(g, b) {
@@ -1085,7 +1256,7 @@ function drawBrick(b) {
     const protectedBoss = b.boss && isBossProtected();
     const alpha = protectedBoss ? 0.55 : 1;
     ctx.globalAlpha = alpha;
-    ctx.drawImage(b.sprite, b.x, b.y, b.w, b.h);
+    ctx.drawImage(b.sprite, b.x, b.y - SNOW_CAP, b.w, b.h + SNOW_CAP);
 
     if (b.flash > 0) {
         ctx.globalAlpha = alpha * Math.min(1, b.flash / 8) * 0.8;
@@ -1163,6 +1334,7 @@ function drawBall() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('🤖', ball.x, ball.y + ball.r * 0.1);
+    drawSantaHat(ball.x, ball.y, ball.r);
 }
 
 function drawParticles() {
@@ -1237,6 +1409,7 @@ function render() {
     }
 
     drawChart();
+    drawSnow();
     for (const b of bricks) {
         if (b.alive) drawBrick(b);
     }
@@ -1245,6 +1418,7 @@ function render() {
     if (gameState === 'START' || gameState === 'SERVE' || gameState === 'PLAYING') {
         drawBall();
     }
+    drawSanta();
     drawParticles();
     drawPopups();
 
