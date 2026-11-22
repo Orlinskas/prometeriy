@@ -1,0 +1,214 @@
+:root {
+    --bg-color: #000000;
+    --text-color: #ffffff;
+    --accent-color: #3ca069; /* Фирменный зелёный журнала */
+    --muted-color: #8a8a8a;
+    --error-color: #e07a5f;
+    --gift-color: #f2cc8f;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Платформу двигают пальцем — страница не должна прокручиваться */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 600px;
+    background: var(--bg-color);
+    border-left: 1px solid #1f1f1f;
+    border-right: 1px solid #1f1f1f;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen {
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--accent-color);
+    padding: 2rem 1.5rem;
+    text-align: center;
+    pointer-events: auto;
+    max-width: 85%;
+}
+
+.hidden {
+    display: none !important;
+}
+
+h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 0.75rem;
+}
+
+#title {
+    cursor: default;
+}
+
+.error-text {
+    color: var(--error-color);
+}
+
+.success-text {
+    color: var(--accent-color);
+}
+
+.subtitle {
+    color: var(--accent-color);
+    font-style: italic;
+    line-height: 1.4;
+    margin-bottom: 1.25rem;
+}
+
+.controls {
+    color: var(--muted-color);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+}
+
+.btn {
+    background: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+    border-radius: 0;
+    font-family: 'IBM Plex Serif', Georgia, serif;
+    font-size: 1rem;
+    padding: 12px 32px;
+    margin-top: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+    background: var(--text-color);
+    color: var(--bg-color);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+#death-reason {
+    color: var(--muted-color);
+    font-style: italic;
+    margin-bottom: 0.5rem;
+}
+
+.score-board {
+    margin: 1rem 0;
+    line-height: 1.7;
+}
+
+.score-board span {
+    font-weight: 700;
+}
+
+.gift {
+    color: var(--gift-color);
+    line-height: 1.4;
+    margin-bottom: 1rem;
+}
+
+.cheat {
+    color: var(--accent-color);
+    font-size: 0.8rem;
+    margin-top: 1rem;
+}
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #1f1f1f;
+    pointer-events: none;
+}
+
+.hud-label {
+    display: block;
+    color: var(--muted-color);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hud-right {
+    text-align: right;
+}
+
+#hud-cap {
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+#hud-round {
+    font-size: 1rem;
+}
+
+/* На высоких экранах опускаем окна, чтобы был виден мир над ними */
+@media (min-height: 700px) {
+    .screen {
+        margin-top: 18vh;
+    }
+}
+
+@media (max-width: 400px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .screen {
+        padding: 1.5rem 1rem;
+        max-width: 92%;
+    }
+}

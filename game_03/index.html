@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Дизрапт</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <canvas id="gameCanvas"></canvas>
+
+        <div id="ui-layer">
+            <div id="hud" class="hidden">
+                <div>
+                    <span class="hud-label">капитализация</span>
+                    <span id="hud-cap">$1 млрд</span>
+                </div>
+                <div class="hud-right">
+                    <span class="hud-label">инвестиции</span>
+                    <span id="hud-round">Раунд A</span>
+                </div>
+            </div>
+
+            <div id="start-screen" class="screen">
+                <h1 id="title">ДИЗРАПТ</h1>
+                <p class="subtitle">ИИ‑КОРП. Миссия: благо всего человечества</p>
+                <p class="controls">Двигай платформу пальцем, мышью или стрелками.<br>Тап или пробел — запустить нейросеть.</p>
+                <button id="start-btn" class="btn">Начать дизрапт</button>
+                <p id="cheat-note" class="cheat hidden"></p>
+            </div>
+
+            <div id="game-over-screen" class="screen hidden">
+                <h1 class="error-text">ПУЗЫРЬ ЛОПНУЛ</h1>
+                <p id="death-reason">Инвесторы ушли в следующий хайп</p>
+                <div class="score-board">
+                    <p>Разрушено: <span id="final-destroyed">0</span> из <span id="final-total">0</span></p>
+                    <p>Капитализация: <span id="final-score">$0</span></p>
+                    <p>Рекорд: <span id="best-score">$0</span></p>
+                </div>
+                <button id="restart-btn" class="btn">Новый раунд</button>
+            </div>
+
+            <div id="win-screen" class="screen hidden">
+                <h1 class="success-text">МИР ДИЗРАПТНУТ</h1>
+                <p class="subtitle">Профессии, интернет и правда оптимизированы. Продавать больше некому.</p>
+                <div class="score-board">
+                    <p>Капитализация: <span id="win-score">$0</span></p>
+                </div>
+                <p class="gift">🎁 Для игрока есть подарок, сделай скриншот и напиши в редакцию!</p>
+                <button id="win-restart-btn" class="btn">Найти новый мир</button>
+            </div>
+        </div>
+    </div>
+    <script src="audio.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
