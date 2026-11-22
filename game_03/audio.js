@@ -238,6 +238,24 @@ function sfxAlert() {
     tone(660, t + 0.18, 0.35, 'sine', 0.09);
 }
 
+// Появился риск: тревожное «пип‑пип»
+function sfxRisk() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    tone(740, t, 0.08, 'square', 0.04);
+    tone(740, t + 0.12, 0.08, 'square', 0.04);
+}
+
+// Попал в риск: удары судейского молотка
+function sfxGavel() {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    [0, 0.14].forEach((d) => {
+        tone(180, t + d, 0.09, 'square', 0.08);
+        noise(t + d, 0.05, 0.1, 'lowpass', 1200);
+    });
+}
+
 // Грустный тромбон: уа‑уа‑уа‑уаааа
 function sfxSadTrombone() {
     if (!audioCtx) return;

@@ -11,7 +11,8 @@ const COLORS = {
     corp: '#3ca069',      // ИИ‑КОРП: стерильный фирменный зелёный
     text: '#ffffff',
     muted: '#8a8a8a',
-    brickText: '#111111'
+    brickText: '#111111',
+    danger: '#ff6b5e'     // риски
 };
 const FONT = '"IBM Plex Serif", Georgia, serif';
 const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
@@ -25,54 +26,67 @@ const ROUNDS = ['A', 'B', 'C'];       // жизни = раунды инвест�
 const START_CAP = 1;                  // млрд $
 const CHART_MAX = 10000;              // млрд $ — верх графика
 const BEST_KEY = 'disrupt_best_score';
+const MIN_BRICK_FONT = 9.5;
+
+const ENEMY_UNLOCK_HITS = 6;   // риски появляются не сразу
+const ENEMY_WARN = 60;         // ~1 с «материализации», пока риск безопасен
+const ENEMY_LIFE = 420;        // ~7 с на поле
+const ENEMY_FADE = 30;
+const ENEMY_SPAWN_MIN = 420;   // пауза между рисками в кадрах (60 = 1 с)…
+const ENEMY_SPAWN_MAX = 660;   // …к концу игры сокращается на 40%
+const ENEMY_HITBOX = 0.6;      // доля радиуса риска, которая «ловит» мяч
+const ENEMY_SECOND_AT = 0.7;   // с какой доли разрушенного мира рисков может быть двое
 
 // Мир сверху вниз. Мяч сначала бьёт нижние ряды, поэтому внизу мелочи, наверху главное.
+// style — форма блока: бумажка, окно сайта, бейдж сотрудника, табличка, толпа.
 const ROWS = [
     {
-        boss: true, color: '#ffffff', hp: 6, value: 1300,
+        boss: true, style: 'crowd', color: '#ffffff', hp: 6, value: 1300,
         bricks: [{ label: 'ВАШИ КЛИЕНТЫ' }]
     },
     {
-        color: '#8fb3e0', hp: 2, value: 150,
+        style: 'plaque', color: '#8fb3e0', hp: 2, value: 150,
         bricks: [
-            { label: 'Правда', epitaph: 'не отличить' },
-            { label: 'Вкус', epitaph: 'усреднено' },
-            { label: 'Опенсорс', epitaph: 'PR закрыты' },
-            { label: 'Математика', epitaph: 'решено*' },
-            { label: 'Интернет', epitaph: 'теперь слоп' }
+            { label: 'Правда', icon: '📜', epitaph: 'не отличить' },
+            { label: 'Вкус', icon: '🍷', epitaph: 'усреднено' },
+            { label: 'Опенсорс', icon: '🐧', epitaph: 'PR закрыты' },
+            { label: 'Математика', icon: '➗', epitaph: 'решено*' },
+            { label: 'Интернет', icon: '🌍', epitaph: 'теперь слоп' }
         ]
     },
     {
-        color: '#e07a5f', hp: 1, value: 100,
+        style: 'badge', color: '#e07a5f', hp: 1, value: 100,
         bricks: [
-            { label: 'Художники', epitaph: 'демократизировано' },
-            { label: 'Переводчики', epitaph: 'оптимизировано' },
-            { label: 'Копирайтеры', epitaph: 'отличный вопрос!' },
-            { label: 'Джуниоры', epitaph: 'не нанимаем' },
-            { label: 'Дизайнеры', epitaph: 'заменено промптом' }
+            { label: 'Художники', icon: '🎨', epitaph: 'демократизировано' },
+            { label: 'Переводчики', icon: '🌐', epitaph: 'оптимизировано' },
+            { label: 'Копирайтеры', icon: '✍️', epitaph: 'отличный вопрос!' },
+            { label: 'Джуниоры', icon: '🐣', epitaph: 'не нанимаем' },
+            { label: 'Дизайнеры', icon: '📐', epitaph: 'заменено промптом' }
         ]
     },
     {
-        color: '#f4a261', hp: 1, value: 30,
+        style: 'browser', color: '#f4a261', hp: 1, value: 30,
         bricks: [
-            { label: 'Stack Overflow', epitaph: 'закрыто как дубликат' },
-            { label: 'Фотостоки', epitaph: 'сгенерировано' },
-            { label: 'Форумы', epitaph: 'тишина' },
-            { label: 'Рефераты', epitaph: 'сдано за 3 секунды' },
-            { label: 'Поиск', epitaph: 'краткий ИИ‑ответ' }
+            { label: 'Stack Overflow', icon: '📚', epitaph: 'закрыто как дубликат' },
+            { label: 'Фотостоки', icon: '📷', epitaph: 'сгенерировано' },
+            { label: 'Форумы', icon: '💬', epitaph: 'тишина' },
+            { label: 'Рефераты', icon: '📝', epitaph: 'сдано за 3 секунды' },
+            { label: 'Поиск', icon: '🔍', epitaph: 'краткий ИИ‑ответ' }
         ]
     },
     {
-        color: '#f2cc8f', hp: 1, value: 10,
+        style: 'paper', color: '#f2cc8f', hp: 1, value: 10,
         bricks: [
-            { label: 'Капча', epitaph: 'пройдено ботом' },
-            { label: 'Домашка', epitaph: 'сделано' },
-            { label: 'Открытки', epitaph: 'шесть пальцев' },
-            { label: 'Меню кафе', epitaph: 'ПИЦЦЦА' },
-            { label: 'Вывески', epitaph: 'ВКУСНАЯ ЕДДА' }
+            { label: 'Капча', icon: '🚦', epitaph: 'пройдено ботом' },
+            { label: 'Домашка', icon: '📓', epitaph: 'сделано' },
+            { label: 'Открытки', icon: '💌', epitaph: 'шесть пальцев' },
+            { label: 'Меню кафе', icon: '🍕', epitaph: 'ПИЦЦЦА' },
+            { label: 'Вывески', icon: '🏪', epitaph: 'ВКУСНАЯ ЕДДА' }
         ]
     }
 ];
+
+const CROWD = ['🧑', '👩', '👨', '👵', '👴', '🧔', '👧', '👦', '👱', '🧓'];
 
 const BOSS_LINES = [
     'отток клиентов',
@@ -81,6 +95,18 @@ const BOSS_LINES = [
     'клиентов заменили агенты',
     'бюджеты урезаны',
     'продавать некому'
+];
+
+// Враги ИИ‑КОРП. Попал в риск — раунд проигран.
+const ENEMIES = [
+    { emoji: '🐌', label: 'Реальность', reason: 'Нейросеть столкнулась с реальностью' },
+    { emoji: '🕵️', label: 'SEC', reason: 'SEC заинтересовалась бухгалтерией' },
+    { emoji: '👨‍⚖️', label: 'Суд', reason: 'Суд: учиться на чужих книгах нельзя' },
+    { emoji: '🏛️', label: 'Регулятор', reason: 'Регулятор принял ещё один закон об ИИ' },
+    { emoji: '🧮', label: 'Проверка в Lean', reason: 'Lean нашёл расхождения текстов' },
+    { emoji: '📰', label: 'Журналист', reason: 'Журналист досмотрел демо без ускорения' },
+    { emoji: '🔌', label: 'Счёт за свет', reason: 'Дата‑центру выставили счёт за электричество' },
+    { emoji: '🖼️', label: 'Художник с иском', reason: 'Художник нашёл свои картины в датасете' }
 ];
 
 const BALL_LOST = [
@@ -102,8 +128,10 @@ const GAME_OVER_REASONS = [
 
 let W = 0;
 let H = 0;
+let DPR = 1;
 let gameState = 'START'; // START, SERVE, PLAYING, ENDING, GAMEOVER, WIN
 let bricks = [];
+let enemies = [];
 let particles = [];
 let popups = [];
 let chart = [];
@@ -115,6 +143,10 @@ let hitsDone = 0;
 let message = null;
 let shake = 0;
 let endTimer = 0;
+let enemyTimer = 0;
+let risksAnnounced = false;
+let bricksBottom = 0;
+let iconMode = 'left'; // 'left' — иконка слева от подписи, 'top' — над ней (узкие экраны)
 let lastTime = 0;
 let lastEndTime = 0;
 let lastProtectedPopup = 0;
@@ -201,6 +233,16 @@ function wrapLines(text, maxW) {
     return lines;
 }
 
+function pathRoundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+}
+
 // --- LAYOUT ---
 
 function resize() {
@@ -210,24 +252,27 @@ function resize() {
     const oldH = H;
     W = rect.width;
     H = rect.height;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     layout(oldW, oldH);
 }
 
 function layout(oldW, oldH) {
-    const brickH = clamp(H * 0.042, 26, 36);
     const colW = (W - SIDE * 2 - GAP * (COLS - 1)) / COLS;
+    iconMode = colW >= 100 ? 'left' : 'top';
+    const brickH = iconMode === 'left' ? clamp(H * 0.045, 28, 38) : clamp(H * 0.058, 34, 46);
+    const bossH = clamp(brickH * 1.7, 50, 66);
 
     const rowBoxes = [];
     let y = HUD_HEIGHT + 28;
     for (const row of ROWS) {
-        const h = row.boss ? Math.round(brickH * 1.4) : brickH;
+        const h = row.boss ? bossH : brickH;
         rowBoxes.push({ y, h });
         y += h + GAP;
     }
+    bricksBottom = y - GAP;
 
     for (const b of bricks) {
         const box = rowBoxes[b.row];
@@ -241,6 +286,7 @@ function layout(oldW, oldH) {
             b.w = colW;
         }
         fitBrickText(b);
+        b.dirty = true;
     }
 
     // Один размер шрифта на ряд — так ряды выглядят ровно
@@ -251,7 +297,7 @@ function layout(oldW, oldH) {
     for (const b of bricks) {
         if (!b.boss && b.font > rowFont[b.row]) {
             b.font = rowFont[b.row];
-            b.lines = brickLines(b, b.font).lines;
+            b.lines = brickLines(b, b.font, b.mode).lines;
         }
     }
 
@@ -267,45 +313,83 @@ function layout(oldW, oldH) {
     ball.baseSpeed = clamp(H * 0.0075, 4.5, 7);
     updateBallSpeed();
 
-    if (gameState === 'PLAYING' && oldW && oldH) {
-        ball.x = clamp(ball.x * W / oldW, ball.r, W - ball.r);
-        ball.y = ball.y * H / oldH;
+    if (oldW && oldH) {
+        if (gameState === 'PLAYING') {
+            ball.x = clamp(ball.x * W / oldW, ball.r, W - ball.r);
+            ball.y = ball.y * H / oldH;
+        }
+        for (const e of enemies) {
+            e.x = clamp(e.x * W / oldW, e.r, W - e.r);
+            e.baseY = e.baseY * H / oldH;
+        }
     }
     if (gameState === 'START' || gameState === 'SERVE') {
         placeBallOnPaddle();
     }
 }
 
-// Подбираем размер шрифта, чтобы подпись влезла в кирпич (при необходимости в две строки).
-// Мельче MIN_BRICK_FONT не уменьшаем — на узких экранах текст сожмётся по ширине при отрисовке.
-const MIN_BRICK_FONT = 10;
+// Где внутри блока иконка и подпись. mode: 'left', 'top' или 'none' (без иконки)
+function brickGeom(b, mode) {
+    const top = b.style === 'browser' ? 6 : 0; // у «окна сайта» сверху заголовок
+    const innerH = b.h - top;
+    const pad = mode === 'top' ? 3 : 5;
+    if (mode === 'left') {
+        const icon = Math.min(innerH * 0.55, 20);
+        const textX = pad + icon + 5;
+        return {
+            icon, iconX: pad + icon / 2 + 1, iconY: top + innerH / 2,
+            textX, textW: b.w - textX - pad, textY: top + innerH / 2, textH: innerH - 4,
+            maxFont: Math.min(14, innerH * 0.42)
+        };
+    }
+    if (mode === 'top') {
+        const icon = innerH * 0.36;
+        return {
+            icon, iconX: b.w / 2, iconY: top + innerH * 0.33,
+            textX: pad, textW: b.w - pad * 2, textY: top + innerH * 0.73, textH: innerH * 0.4,
+            maxFont: Math.min(12, innerH * 0.3)
+        };
+    }
+    return {
+        icon: 0, iconX: 0, iconY: 0,
+        textX: pad, textW: b.w - pad * 2, textY: top + innerH / 2, textH: innerH - 4,
+        maxFont: Math.min(14, innerH * 0.42)
+    };
+}
 
-function brickLines(b, size) {
-    const maxW = b.w - 6;
-    const maxH = b.h - 4;
+function brickLines(b, size, mode) {
+    const geo = brickGeom(b, mode);
     ctx.font = `700 ${size}px ${FONT}`;
-    if (ctx.measureText(b.label).width <= maxW) {
+    const fits = (t) => ctx.measureText(t).width <= geo.textW;
+    if (fits(b.label)) {
         return { lines: [b.label], fits: true };
     }
-    if (b.label.includes(' ') && size * 2.2 <= maxH) {
+    if (mode !== 'top' && b.label.includes(' ') && size * 2.2 <= geo.textH) {
         const parts = splitInTwo(b.label);
-        return { lines: parts, fits: parts.every((p) => ctx.measureText(p).width <= maxW) };
+        return { lines: parts, fits: parts.every(fits) };
     }
     return { lines: [b.label], fits: false };
 }
 
+// Подбираем размер шрифта, чтобы подпись влезла в блок. Если с иконкой не влезает даже
+// в две строки — убираем иконку. Мельче MIN_BRICK_FONT не уменьшаем: текст сожмётся по ширине.
 function fitBrickText(b) {
-    const start = b.boss ? Math.min(20, b.h * 0.5) : Math.min(14, b.h * 0.5);
-    for (let size = start; size >= MIN_BRICK_FONT; size -= 0.5) {
-        const res = brickLines(b, size);
-        if (res.fits) {
-            b.font = size;
-            b.lines = res.lines;
-            return;
+    if (b.boss) return; // клиенты рисуются отдельно
+    for (const mode of [iconMode, 'none']) {
+        const geo = brickGeom(b, mode);
+        for (let size = geo.maxFont; size >= MIN_BRICK_FONT; size -= 0.5) {
+            const res = brickLines(b, size, mode);
+            if (res.fits) {
+                b.mode = mode;
+                b.font = size;
+                b.lines = res.lines;
+                return;
+            }
         }
     }
+    b.mode = iconMode;
     b.font = MIN_BRICK_FONT;
-    b.lines = brickLines(b, MIN_BRICK_FONT).lines;
+    b.lines = [b.label];
 }
 
 // --- WORLD ---
@@ -318,7 +402,9 @@ function buildBricks() {
                 row: ri,
                 col: ci,
                 label: data.label,
+                icon: data.icon || '',
                 epitaph: data.epitaph || '',
+                style: row.style,
                 color: row.color,
                 hp: row.hp,
                 maxHp: row.hp,
@@ -329,7 +415,14 @@ function buildBricks() {
                 flash: 0,
                 x: 0, y: 0, w: 0, h: 0,
                 font: 12,
-                lines: [data.label]
+                lines: [data.label],
+                mode: 'none',
+                // Толпа клиентов: order решает, на каком ударе человек «уйдёт»
+                crowd: row.boss
+                    ? Array.from({ length: 60 }, () => ({ emoji: pick(CROWD), order: Math.random() }))
+                    : null,
+                sprite: null,
+                dirty: true
             });
         });
     });
@@ -352,18 +445,19 @@ function addCrack(b) {
         pts.push([x, y]);
     }
     b.cracks.push(pts);
+    b.dirty = true;
 }
 
-function spawnDebris(b, count) {
+function spawnParticles(x, y, w, h, color, count) {
     for (let i = 0; i < count; i++) {
         if (particles.length > 250) break;
         particles.push({
-            x: b.x + Math.random() * b.w,
-            y: b.y + Math.random() * b.h,
+            x: x + Math.random() * w,
+            y: y + Math.random() * h,
             vx: (Math.random() - 0.5) * 4,
             vy: -Math.random() * 3,
             size: 3 + Math.random() * 5,
-            color: b.color,
+            color,
             life: 1
         });
     }
@@ -394,6 +488,92 @@ function placeBallOnPaddle() {
     ball.y = paddle.y - ball.r - 1;
 }
 
+// --- ENEMIES (риски) ---
+
+function enemyZone() {
+    let top = bricksBottom + 40;
+    let bottom = paddle.y - 110;
+    if (bottom - top < 20) {
+        top = bricksBottom + 20;
+        bottom = paddle.y - 70;
+    }
+    return { top, bottom };
+}
+
+function isEnemyActive(e) {
+    return e.age >= ENEMY_WARN && e.age <= e.life - ENEMY_FADE;
+}
+
+function spawnEnemy() {
+    const zone = enemyZone();
+    if (zone.bottom - zone.top < 10) return;
+
+    const r = clamp(W * 0.035, 14, 20);
+    const used = enemies.map((e) => e.type);
+    const pool = ENEMIES.filter((t) => !used.includes(t));
+    const type = pick(pool.length ? pool : ENEMIES);
+
+    // Не появляемся прямо на мяче и на другом риске
+    let x = W / 2;
+    let y = zone.top;
+    for (let tries = 0; tries < 12; tries++) {
+        x = r + 8 + Math.random() * (W - 2 * r - 16);
+        y = zone.top + Math.random() * (zone.bottom - zone.top);
+        const farFromBall = Math.hypot(x - ball.x, y - ball.y) > 120;
+        const farFromOthers = enemies.every((e) => Math.hypot(x - e.x, y - e.baseY) > r * 4);
+        if (farFromBall && farFromOthers) break;
+    }
+
+    const dir = Math.random() < 0.5 ? -1 : 1;
+    enemies.push({
+        type, x, y, baseY: y, r,
+        vx: dir * W * (0.0012 + Math.random() * 0.0012),
+        age: 0,
+        life: ENEMY_LIFE
+    });
+    sfxRisk();
+
+    if (!risksAnnounced) {
+        risksAnnounced = true;
+        addPopup(W / 2, zone.top - 6, 'у ИИ‑КОРП появились риски');
+    }
+}
+
+function updateEnemies(dt) {
+    if (gameState === 'PLAYING' && !isMonopoly && hitsDone >= ENEMY_UNLOCK_HITS) {
+        enemyTimer -= dt;
+        if (enemyTimer <= 0) {
+            const progress = hitsDone / totalHits;
+            const maxEnemies = progress < ENEMY_SECOND_AT ? 1 : 2;
+            if (enemies.length < maxEnemies) spawnEnemy();
+            const pause = ENEMY_SPAWN_MIN + Math.random() * (ENEMY_SPAWN_MAX - ENEMY_SPAWN_MIN);
+            enemyTimer = pause * (1 - 0.4 * progress);
+        }
+    }
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        const e = enemies[i];
+        e.age += dt;
+        e.x += e.vx * dt;
+        if (e.x < e.r + 4) {
+            e.x = e.r + 4;
+            e.vx = Math.abs(e.vx);
+        } else if (e.x > W - e.r - 4) {
+            e.x = W - e.r - 4;
+            e.vx = -Math.abs(e.vx);
+        }
+        e.y = e.baseY + Math.sin(e.age * 0.05) * 6;
+        if (e.age >= e.life) enemies.splice(i, 1);
+    }
+}
+
+function enemyHit(e) {
+    shake = 10;
+    spawnParticles(ball.x - 10, ball.y - 10, 20, 20, COLORS.danger, 16);
+    sfxGavel();
+    loseBall(e.type.reason);
+}
+
 // --- GAME FLOW ---
 
 function initGame() {
@@ -404,6 +584,9 @@ function initGame() {
     chart = [score];
     round = 0;
     hitsDone = 0;
+    enemies = [];
+    enemyTimer = 120;
+    risksAnnounced = false;
     particles = [];
     popups = [];
     message = null;
@@ -431,17 +614,20 @@ function launchBall() {
     gameState = 'PLAYING';
 }
 
-function loseBall() {
+// reason — причина от риска; без неё мяч просто упал
+function loseBall(reason) {
     round++;
+    enemies = [];
+    enemyTimer = 180; // передышка после потери мяча
     if (round >= ROUNDS.length) {
-        gameOver();
+        gameOver(reason);
         return;
     }
     // Провал — повод для нового раунда. И оценка, конечно, выросла.
     const bonus = 100 * round;
     addScore(bonus);
     message = {
-        title: pick(BALL_LOST),
+        title: reason || pick(BALL_LOST),
         text: `Инвесторы дали ещё денег. Раунд ${ROUNDS[round]}: оценка +${formatCap(bonus)}`
     };
     sfxSadTrombone();
@@ -449,7 +635,7 @@ function loseBall() {
     placeBallOnPaddle();
 }
 
-function gameOver() {
+function gameOver(reason) {
     gameState = 'GAMEOVER';
     lastEndTime = Date.now();
     stopMusic();
@@ -457,7 +643,7 @@ function gameOver() {
     saveBest();
 
     const destroyed = bricks.filter((b) => !b.alive).length;
-    document.getElementById('death-reason').innerText = pick(GAME_OVER_REASONS);
+    document.getElementById('death-reason').innerText = reason || pick(GAME_OVER_REASONS);
     document.getElementById('final-destroyed').innerText = destroyed;
     document.getElementById('final-total').innerText = bricks.length;
     document.getElementById('final-score').innerText = formatCap(score);
@@ -471,6 +657,7 @@ function startEnding() {
     gameState = 'ENDING';
     endTimer = 100; // ~1.7 секунды полюбоваться пустым миром
     shake = 14;
+    enemies = [];
     stopMusic();
 }
 
@@ -500,6 +687,7 @@ function hitBrick(b) {
 
     b.hp--;
     b.flash = 8;
+    b.dirty = true;
     hitsDone++;
     addScore(b.value);
     updateBallSpeed();
@@ -527,12 +715,12 @@ function destroyBrick(b) {
     b.alive = false;
 
     if (b.boss) {
-        spawnDebris(b, 80);
+        spawnParticles(b.x, b.y, b.w, b.h, b.color, 80);
         startEnding();
         return;
     }
 
-    spawnDebris(b, 10);
+    spawnParticles(b.x, b.y, b.w, b.h, b.color, 10);
     addPopup(b.x + b.w / 2, b.y + b.h / 2, b.epitaph, '+' + formatCap(b.value));
     sfxCash();
 
@@ -630,6 +818,18 @@ function moveBall(dt) {
         }
         if (gameState !== 'PLAYING') return;
 
+        // Риски: попал — раунд проигран
+        for (const e of enemies) {
+            if (!isEnemyActive(e)) continue;
+            const ex = ball.x - e.x;
+            const ey = ball.y - e.y;
+            const rr = ball.r + e.r * ENEMY_HITBOX;
+            if (ex * ex + ey * ey < rr * rr) {
+                enemyHit(e);
+                return;
+            }
+        }
+
         // Мяч упал
         if (ball.y - ball.r > H) {
             loseBall();
@@ -662,6 +862,8 @@ function update(dt) {
         endTimer -= dt;
         if (endTimer <= 0) gameWin();
     }
+
+    updateEnemies(dt);
 
     for (const b of bricks) {
         if (b.flash > 0) b.flash -= dt;
@@ -731,51 +933,217 @@ function drawChart() {
     ctx.fillText(`ИИКОРП ▲ ${formatCap(score)}`, labelX, labelY);
 }
 
-function drawBrick(b) {
-    const protectedBoss = b.boss && isBossProtected();
-    ctx.globalAlpha = protectedBoss ? 0.55 : 1;
+// Внешний вид блока рисуется один раз в отдельный холст и перерисовывается только
+// при изменении (удар, трещина, ресайз) — так каждый кадр это одна drawImage.
+function renderBrickSprite(b) {
+    if (!b.sprite) b.sprite = document.createElement('canvas');
+    const c = b.sprite;
+    c.width = Math.max(1, Math.ceil(b.w * DPR));
+    c.height = Math.max(1, Math.ceil(b.h * DPR));
+    const g = c.getContext('2d');
+    g.setTransform(DPR, 0, 0, DPR, 0, 0);
+    g.clearRect(0, 0, b.w, b.h);
+    drawBrickBody(g, b);
+    if (b.boss) drawCrowdContent(g, b);
+    else drawBrickContent(g, b);
+    b.dirty = false;
+}
 
-    ctx.fillStyle = b.color;
-    ctx.fillRect(b.x, b.y, b.w, b.h);
+function drawBrickBody(g, b) {
+    const w = b.w;
+    const h = b.h;
+    const r = 5;
 
-    if (b.flash > 0) {
-        ctx.globalAlpha = (protectedBoss ? 0.55 : 1) * Math.min(1, b.flash / 8);
-        ctx.fillStyle = b.boss ? COLORS.corp : '#ffffff';
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-        ctx.globalAlpha = protectedBoss ? 0.55 : 1;
+    pathRoundRect(g, 0, 0, w, h, r);
+    g.fillStyle = b.color;
+    g.fill();
+
+    g.save();
+    pathRoundRect(g, 0, 0, w, h, r);
+    g.clip();
+
+    // Объём: светлая кромка сверху, тень снизу
+    g.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    g.fillRect(0, 0, w, 3);
+    g.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    g.fillRect(0, h - 3, w, 3);
+
+    if (b.style === 'browser') {
+        // Окно сайта: заголовок с тремя кнопками
+        g.fillStyle = 'rgba(0, 0, 0, 0.22)';
+        g.fillRect(0, 0, w, 6);
+        ['#ff5f57', '#febc2e', '#28c840'].forEach((color, i) => {
+            g.fillStyle = color;
+            g.beginPath();
+            g.arc(5 + i * 5, 3, 1.5, 0, Math.PI * 2);
+            g.fill();
+        });
+    } else if (b.style === 'badge') {
+        // Бейдж сотрудника: прорезь для шнурка
+        g.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        pathRoundRect(g, w / 2 - 7, 3, 14, 3, 1.5);
+        g.fill();
+    } else if (b.style === 'plaque') {
+        // Табличка ценности: тонкая внутренняя рамка
+        g.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        g.lineWidth = 1;
+        pathRoundRect(g, 3.5, 3.5, w - 7, h - 7, 3);
+        g.stroke();
     }
 
+    // Трещины
     if (b.cracks.length) {
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.65)';
-        ctx.lineWidth = 1.5;
+        g.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        g.lineWidth = 1.5;
         for (const crack of b.cracks) {
-            ctx.beginPath();
+            g.beginPath();
             crack.forEach(([rx, ry], i) => {
-                const x = b.x + rx * b.w;
-                const y = b.y + ry * b.h;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                if (i === 0) g.moveTo(rx * w, ry * h);
+                else g.lineTo(rx * w, ry * h);
             });
-            ctx.stroke();
+            g.stroke();
         }
     }
+    g.restore();
 
-    ctx.fillStyle = COLORS.brickText;
-    ctx.font = `700 ${b.font}px ${FONT}`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // Контур
+    g.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+    g.lineWidth = 1;
+    pathRoundRect(g, 0.5, 0.5, w - 1, h - 1, r);
+    g.stroke();
+
+    if (b.style === 'paper') {
+        // Бумажка с загнутым уголком
+        const s = Math.min(9, h * 0.3);
+        g.save();
+        g.globalCompositeOperation = 'destination-out';
+        g.beginPath();
+        g.moveTo(w - s, 0);
+        g.lineTo(w, 0);
+        g.lineTo(w, s);
+        g.closePath();
+        g.fill();
+        g.restore();
+        g.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        g.beginPath();
+        g.moveTo(w - s, 0);
+        g.lineTo(w - s, s);
+        g.lineTo(w, s);
+        g.closePath();
+        g.fill();
+    }
+}
+
+function drawBrickContent(g, b) {
+    const geo = brickGeom(b, b.mode);
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+
+    if (b.mode !== 'none' && b.icon) {
+        g.fillStyle = '#000000';
+        g.font = `${geo.icon}px ${EMOJI_FONT}`;
+        g.fillText(b.icon, geo.iconX, geo.iconY + 1);
+    }
+
+    g.fillStyle = COLORS.brickText;
+    g.font = `700 ${b.font}px ${FONT}`;
     const lineH = b.font * 1.1;
-    const startY = b.y + b.h / 2 - (lineH * (b.lines.length - 1)) / 2;
+    const cx = geo.textX + geo.textW / 2;
+    const startY = geo.textY - (lineH * (b.lines.length - 1)) / 2;
     b.lines.forEach((line, i) => {
-        ctx.fillText(line, b.x + b.w / 2, startY + i * lineH + 1, b.w - 6);
+        g.fillText(line, cx, startY + i * lineH + 1, geo.textW);
     });
+}
+
+// «Ваши клиенты» — толпа людей. С каждым ударом её становится меньше.
+function drawCrowdContent(g, b) {
+    const w = b.w;
+    const h = b.h;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+
+    g.fillStyle = COLORS.brickText;
+    g.font = `700 ${Math.min(18, h * 0.3)}px ${FONT}`;
+    g.fillText(b.label, w / 2, h * 0.27, w - 10);
+
+    const size = h * 0.36;
+    const step = size * 1.1;
+    const n = Math.max(1, Math.floor((w - 12) / step));
+    const startX = (w - n * step) / 2 + step / 2;
+    const gone = (b.maxHp - b.hp) / b.maxHp;
+    g.font = `${size}px ${EMOJI_FONT}`;
+    for (let i = 0; i < n; i++) {
+        const person = b.crowd[i % b.crowd.length];
+        if (person.order < gone) continue;
+        g.fillText(person.emoji, startX + i * step, h * 0.7);
+    }
+}
+
+function drawBrick(b) {
+    if (b.dirty || !b.sprite) renderBrickSprite(b);
+
+    const protectedBoss = b.boss && isBossProtected();
+    const alpha = protectedBoss ? 0.55 : 1;
+    ctx.globalAlpha = alpha;
+    ctx.drawImage(b.sprite, b.x, b.y, b.w, b.h);
+
+    if (b.flash > 0) {
+        ctx.globalAlpha = alpha * Math.min(1, b.flash / 8) * 0.8;
+        ctx.fillStyle = b.boss ? COLORS.corp : '#ffffff';
+        pathRoundRect(ctx, b.x, b.y, b.w, b.h, 5);
+        ctx.fill();
+    }
 
     // Клиенты стали целью — пульсирующая рамка
     if (b.boss && !protectedBoss && gameState === 'PLAYING') {
         ctx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() / 150);
         ctx.strokeStyle = COLORS.corp;
         ctx.lineWidth = 3;
-        ctx.strokeRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
+        pathRoundRect(ctx, b.x - 2, b.y - 2, b.w + 4, b.h + 4, 7);
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawEnemies() {
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    for (const e of enemies) {
+        const warming = e.age < ENEMY_WARN;
+        const fading = e.life - e.age < ENEMY_FADE;
+        let alpha = 1;
+        if (warming) alpha = Math.floor(e.age / 8) % 2 ? 0.35 : 0.75;
+        else if (fading) alpha = Math.max(0, (e.life - e.age) / ENEMY_FADE);
+        const r = e.r * (warming ? 0.6 + 0.4 * (e.age / ENEMY_WARN) : 1);
+        const ring = r * 1.15;
+
+        ctx.globalAlpha = alpha;
+
+        // Красная зона опасности
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, ring, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 107, 94, 0.15)';
+        ctx.fill();
+        ctx.strokeStyle = COLORS.danger;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.fillStyle = '#000000';
+        ctx.font = `${r * 1.5}px ${EMOJI_FONT}`;
+        ctx.fillText(e.type.emoji, e.x, e.y + 1);
+
+        const labelX = clamp(e.x, 55, W - 55);
+        ctx.font = `700 11px ${FONT}`;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#000000';
+        ctx.fillStyle = COLORS.danger;
+        ctx.strokeText(e.type.label, labelX, e.y + ring + 10);
+        ctx.fillText(e.type.label, labelX, e.y + ring + 10);
+        if (warming) {
+            ctx.strokeText('⚠ РИСК', labelX, e.y - ring - 10);
+            ctx.fillText('⚠ РИСК', labelX, e.y - ring - 10);
+        }
     }
     ctx.globalAlpha = 1;
 }
@@ -872,6 +1240,7 @@ function render() {
     for (const b of bricks) {
         if (b.alive) drawBrick(b);
     }
+    drawEnemies();
     drawPaddle();
     if (gameState === 'START' || gameState === 'SERVE' || gameState === 'PLAYING') {
         drawBall();
@@ -963,7 +1332,7 @@ onButton('start-btn', initGame);
 onButton('restart-btn', initGame);
 onButton('win-restart-btn', initGame);
 
-// ЧИТ: 5 кликов по заголовку — режим монополии (платформа на всю ширину)
+// ЧИТ: 5 кликов по заголовку — режим монополии (платформа на всю ширину, рисков нет)
 let titleClicks = 0;
 titleEl.addEventListener('pointerdown', (e) => {
     e.stopPropagation();
@@ -974,8 +1343,8 @@ titleEl.addEventListener('pointerdown', (e) => {
         isMonopoly = !isMonopoly;
         layout(W, H);
         cheatNoteEl.innerText = isMonopoly
-            ? 'Режим монополии включён. Антимонопольная служба распущена.'
-            : 'Режим монополии выключен. Конкуренция вернулась.';
+            ? 'Режим монополии включён. Антимонопольная служба распущена, рисков больше нет.'
+            : 'Режим монополии выключен. Конкуренция и риски вернулись.';
         cheatNoteEl.classList.remove('hidden');
     }
 });
