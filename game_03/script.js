@@ -720,7 +720,7 @@ function loseBall(reason) {
         title: reason || pick(TEXTS.ballLost),
         text: fill(TEXTS.game.newRound, { round: ROUNDS[round], bonus: formatCap(bonus) })
     };
-    sfxSadTrombone();
+    sfxLose();
     gameState = 'SERVE';
     placeBallOnPaddle();
 }
@@ -729,7 +729,7 @@ function gameOver(reason) {
     gameState = 'GAMEOVER';
     lastEndTime = Date.now();
     stopMusic();
-    sfxSadTrombone();
+    sfxLose();
     saveBest();
 
     const destroyed = bricks.filter((b) => !b.alive).length;

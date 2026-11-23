@@ -290,45 +290,14 @@ function sfxSleigh() {
     }
 }
 
-// Грустный тромбон: уа‑уа‑уа‑уаааа
-function sfxSadTrombone() {
+// Мяч потерян: три мягких колокольчика вниз (ми – до – ля) и тихий бас — «ну, бывает»
+function sfxLose() {
     if (!audioCtx) return;
-    const t0 = audioCtx.currentTime + 0.02;
-    const notes = [233.08, 220.0, 207.65, 196.0];
-    const durs = [0.3, 0.3, 0.3, 1.0];
-
-    const osc = audioCtx.createOscillator();
-    const filter = audioCtx.createBiquadFilter();
-    const gain = audioCtx.createGain();
-    osc.type = 'sawtooth';
-    filter.type = 'lowpass';
-    filter.frequency.value = 1100;
-
-    let time = t0;
-    gain.gain.setValueAtTime(0.0001, time);
-    notes.forEach((freq, i) => {
-        osc.frequency.setValueAtTime(freq, time);
-        gain.gain.linearRampToValueAtTime(0.12, time + 0.04);
-        gain.gain.setValueAtTime(0.12, time + durs[i] - 0.06);
-        gain.gain.linearRampToValueAtTime(i === notes.length - 1 ? 0.0001 : 0.02, time + durs[i]);
-        time += durs[i];
+    const t = audioCtx.currentTime + 0.02;
+    [659.25, 523.25, 440.0].forEach((freq, i) => {
+        bell(freq, t + i * 0.16, 0.07);
     });
-
-    // Вибрато на последней ноте
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-    lfo.frequency.value = 6;
-    lfoGain.gain.value = 6;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc.frequency);
-    lfo.start(t0 + 0.9);
-    lfo.stop(time);
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(masterGain);
-    osc.start(t0);
-    osc.stop(time + 0.05);
+    tone(110, t + 0.32, 0.6, 'sine', 0.08);
 }
 
 // Победа: касса, касса, касса и фанфары
