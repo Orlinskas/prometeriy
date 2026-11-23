@@ -8,7 +8,7 @@ const ctx = canvas.getContext('2d');
 
 const COLORS = {
     bg: '#000000',
-    corp: '#3ca069',      // «Сверхразум»: стерильный фирменный зелёный
+    corp: '#3ca069',      // «Суперинтеллект»: стерильный фирменный зелёный
     text: '#ffffff',
     muted: '#8a8a8a',
     brickText: '#111111',
@@ -56,7 +56,7 @@ const ROWS = [
 
 const CROWD = ['🧑', '👩', '👨', '👵', '👴', '🧔', '👧', '👦', '👱', '🧓'];
 
-// Враги «Сверхразума». Попал в риск — раунд проигран. Список — в texts.js (TEXTS.risks).
+// Враги «Суперинтеллекта». Попал в риск — раунд проигран. Список — в texts.js (TEXTS.risks).
 const ENEMIES = TEXTS.risks;
 
 // Подставляет значения в шаблон из texts.js: fill('Раунд {round}', { round: 'B' }) → 'Раунд B'
