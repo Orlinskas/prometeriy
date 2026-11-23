@@ -1,4 +1,4 @@
-// ДИЗРАПТ — мини-игра для журнала «Прометерий»
+// ИИ‑АРКАНОИД — мини-игра для журнала «Прометерий»
 // ИИ‑компания разбивает мир кирпич за кирпичом. Чем меньше мира, тем выше капитализация.
 
 const canvas = document.getElementById('gameCanvas');
@@ -8,7 +8,7 @@ const ctx = canvas.getContext('2d');
 
 const COLORS = {
     bg: '#000000',
-    corp: '#3ca069',      // ИИ‑КОРП: стерильный фирменный зелёный
+    corp: '#3ca069',      // «Сверхразум»: стерильный фирменный зелёный
     text: '#ffffff',
     muted: '#8a8a8a',
     brickText: '#111111',
@@ -56,7 +56,7 @@ const ROWS = [
 
 const CROWD = ['🧑', '👩', '👨', '👵', '👴', '🧔', '👧', '👦', '👱', '🧓'];
 
-// Враги ИИ‑КОРП. Попал в риск — раунд проигран. Список — в texts.js (TEXTS.risks).
+// Враги «Сверхразума». Попал в риск — раунд проигран. Список — в texts.js (TEXTS.risks).
 const ENEMIES = TEXTS.risks;
 
 // Подставляет значения в шаблон из texts.js: fill('Раунд {round}', { round: 'B' }) → 'Раунд B'
@@ -1494,8 +1494,8 @@ chart = [score];
 // Шрифт с кириллицей грузится асинхронно — после загрузки заново подгоняем подписи
 if (document.fonts && document.fonts.load) {
     Promise.all([
-        document.fonts.load(`700 14px ${FONT}`, 'Дизрапт'),
-        document.fonts.load(`italic 400 14px ${FONT}`, 'Дизрапт')
+        document.fonts.load(`700 14px ${FONT}`, 'ИИ‑арканоид'),
+        document.fonts.load(`italic 400 14px ${FONT}`, 'ИИ‑арканоид')
     ]).then(() => layout(W, H)).catch(() => {});
 }
 
