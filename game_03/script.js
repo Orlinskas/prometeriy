@@ -1414,15 +1414,45 @@ function canvasX(clientX) {
     return clientX - canvas.getBoundingClientRect().left;
 }
 
+// Мышь: платформа едет точно под курсор.
+// Палец: платформа двигается относительно пальца и быстрее него, как курсор на тачпаде.
+// Так её можно довести до края, не поднося палец к краю экрана, где срабатывает жест «назад».
+const TOUCH_GAIN = 1.6;
+let touchLastX = null;
+
+function isMousePointer(e) {
+    return !e.pointerType || e.pointerType === 'mouse';
+}
+
 window.addEventListener('pointermove', (e) => {
-    pointerX = canvasX(e.clientX);
+    if (isMousePointer(e)) {
+        pointerX = canvasX(e.clientX);
+        return;
+    }
+    if (!e.isPrimary || touchLastX === null) return;
+    const dx = e.clientX - touchLastX;
+    touchLastX = e.clientX;
+    if (gameState === 'SERVE' || gameState === 'PLAYING') {
+        paddle.x = clamp(paddle.x + dx * TOUCH_GAIN, 0, W - paddle.w);
+    }
 });
 
 window.addEventListener('pointerdown', (e) => {
     if (e.target.closest && e.target.closest('button')) return;
-    pointerX = canvasX(e.clientX);
+    if (isMousePointer(e)) {
+        pointerX = canvasX(e.clientX);
+    } else if (e.isPrimary) {
+        pointerX = null; // палец не телепортирует платформу к месту касания
+        touchLastX = e.clientX;
+    }
     handleAction();
 });
+
+function endTouch(e) {
+    if (e.isPrimary) touchLastX = null;
+}
+window.addEventListener('pointerup', endTouch);
+window.addEventListener('pointercancel', endTouch);
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
@@ -1444,8 +1474,9 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
 });
 
-// Мобильные браузеры включают звук только по touchend/click
+// Мобильные браузеры включают звук только в ответ на действие игрока (touchend/pointerup/click)
 window.addEventListener('touchend', unlockAudio);
+window.addEventListener('pointerup', unlockAudio);
 window.addEventListener('click', unlockAudio);
 
 // Не даём странице скроллиться и показывать меню при долгом тапе

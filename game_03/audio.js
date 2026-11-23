@@ -44,17 +44,84 @@ function ensureAudio() {
             data[i] = Math.random() * 2 - 1;
         }
     }
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+    // 'interrupted' — iOS после звонка или блокировки экрана
+    if (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted') {
+        const resumed = audioCtx.resume();
+        if (resumed && resumed.catch) resumed.catch(() => {});
     }
     return true;
 }
 
-// Мобильные браузеры разрешают звук только после touchend/click
+// --- ЗВУК НА ТЕЛЕФОНАХ ---
+// iPhone глушит звук браузерных игр переключателем «Без звука», а музыку из плеера — нет.
+// Чтобы игру было слышно, просим iOS считать её звук «воспроизведением медиа»:
+// через Audio Session API (iOS 17+) и, для старых версий, через тихий зацикленный <audio>.
+
+const IS_IOS = typeof navigator !== 'undefined' &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+let silentAudio = null;
+
+// 0,1 с тишины в формате WAV, собранные прямо в коде, чтобы не держать отдельный файл
+function makeSilentWavUrl() {
+    const sampleRate = 8000;
+    const samples = 800;
+    const bytes = new Uint8Array(44 + samples * 2);
+    const view = new DataView(bytes.buffer);
+    const writeStr = (offset, str) => {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+    };
+    writeStr(0, 'RIFF');
+    view.setUint32(4, 36 + samples * 2, true);
+    writeStr(8, 'WAVE');
+    writeStr(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);              // PCM
+    view.setUint16(22, 1, true);              // моно
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);             // 16 бит
+    writeStr(36, 'data');
+    view.setUint32(40, samples * 2, true);    // сами отсчёты — нули
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(binary);
+}
+
+// Вызывается на каждое касание/клик: браузеры разрешают звук только в ответ на действие игрока
 function unlockAudio() {
-    if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
+    if (typeof navigator !== 'undefined' && navigator.audioSession) {
+        try {
+            navigator.audioSession.type = 'playback';
+        } catch (e) {
+            // Старый Safari — поможет тихий <audio> ниже
+        }
     }
+    if (IS_IOS) {
+        if (!silentAudio) {
+            silentAudio = new Audio(makeSilentWavUrl());
+            silentAudio.loop = true;
+            silentAudio.setAttribute('playsinline', '');
+            silentAudio.setAttribute('x-webkit-airplay', 'deny');
+        }
+        if (silentAudio.paused) silentAudio.play().catch(() => {});
+    }
+
+    const wasRunning = audioCtx && audioCtx.state === 'running';
+    if (!ensureAudio() || wasRunning) return;
+    // Классическая разблокировка: пустой звук внутри жеста игрока
+    const src = audioCtx.createBufferSource();
+    src.buffer = audioCtx.createBuffer(1, 1, 22050);
+    src.connect(audioCtx.destination);
+    src.start(0);
+}
+
+// Вкладку свернули — тихий <audio> тоже на паузу, чтобы не висеть в «Сейчас играет»
+if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', () => {
+        if (silentAudio && document.hidden) silentAudio.pause();
+    });
 }
 
 // --- СИНТЕЗ ---
