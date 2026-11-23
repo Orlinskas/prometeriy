@@ -22,7 +22,7 @@ const SIDE = 10;
 const GAP = 6;
 const COLS = 5;
 const MAX_BOUNCE_ANGLE = Math.PI / 3; // 60° от вертикали
-const ROUNDS = ['A', 'B', 'C'];       // жизни = раунды инвестиций
+const ROUNDS = TEXTS.game.rounds;     // жизни = раунды инвестиций (названия в texts.js)
 const START_CAP = 1;                  // млрд $
 const CHART_MAX = 10000;              // млрд $ — верх графика
 const BEST_KEY = 'disrupt_best_score';
@@ -39,102 +39,53 @@ const ENEMY_SECOND_AT = 0.7;   // с какой доли разрушенног�
 
 // Новый год
 const SNOW_CAP = 4;            // высота снежной шапки над блоком
-const SANTA_LINES = [
-    'Подарки сгенерированы ИИ',
-    'Эльфы оптимизированы',
-    'Санта теперь ИИ‑агент',
-    'Письма Санте читает модель',
-    'Ёлку нарисовала нейросеть',
-    'Доставка подарков: бета‑версия',
-    'С Новым годом от ИИ‑КОРП!'
-];
 
 // Мир сверху вниз. Мяч сначала бьёт нижние ряды, поэтому внизу мелочи, наверху главное.
 // style — форма блока: бумажка, окно сайта, бейдж сотрудника, табличка, толпа.
+// Подписи, иконки и эпитафии блоков — в texts.js (TEXTS.bricks).
 const ROWS = [
     {
         boss: true, style: 'crowd', color: '#ffffff', hp: 6, value: 1300,
-        bricks: [{ label: 'ВАШИ КЛИЕНТЫ' }]
+        bricks: [{ label: TEXTS.bricks.clients }]
     },
-    {
-        style: 'plaque', color: '#8fb3e0', hp: 2, value: 150,
-        bricks: [
-            { label: 'Правда', icon: '📜', epitaph: 'не отличить' },
-            { label: 'Вкус', icon: '🍷', epitaph: 'усреднено' },
-            { label: 'Опенсорс', icon: '🐧', epitaph: 'PR закрыты' },
-            { label: 'Математика', icon: '➗', epitaph: 'решено*' },
-            { label: 'Интернет', icon: '🌍', epitaph: 'теперь слоп' }
-        ]
-    },
-    {
-        style: 'badge', color: '#e07a5f', hp: 1, value: 100,
-        bricks: [
-            { label: 'Художники', icon: '🎨', epitaph: 'демократизировано' },
-            { label: 'Переводчики', icon: '🌐', epitaph: 'оптимизировано' },
-            { label: 'Копирайтеры', icon: '✍️', epitaph: 'отличный вопрос!' },
-            { label: 'Джуниоры', icon: '🐣', epitaph: 'не нанимаем' },
-            { label: 'Дизайнеры', icon: '📐', epitaph: 'заменено промптом' }
-        ]
-    },
-    {
-        style: 'browser', color: '#f4a261', hp: 1, value: 30,
-        bricks: [
-            { label: 'Stack Overflow', icon: '📚', epitaph: 'закрыто как дубликат' },
-            { label: 'Фотостоки', icon: '📷', epitaph: 'сгенерировано' },
-            { label: 'Форумы', icon: '💬', epitaph: 'тишина' },
-            { label: 'Рефераты', icon: '📝', epitaph: 'сдано за 3 секунды' },
-            { label: 'Поиск', icon: '🔍', epitaph: 'краткий ИИ‑ответ' }
-        ]
-    },
-    {
-        style: 'paper', color: '#f2cc8f', hp: 1, value: 10,
-        bricks: [
-            { label: 'Капча', icon: '🚦', epitaph: 'пройдено ботом' },
-            { label: 'Домашка', icon: '📓', epitaph: 'сделано' },
-            { label: 'Открытки', icon: '💌', epitaph: 'шесть пальцев' },
-            { label: 'Меню кафе', icon: '🍕', epitaph: 'ПИЦЦЦА' },
-            { label: 'Вывески', icon: '🏪', epitaph: 'ВКУСНАЯ ЕДДА' }
-        ]
-    }
+    { style: 'plaque', color: '#8fb3e0', hp: 2, value: 150, bricks: TEXTS.bricks.phenomena },
+    { style: 'badge', color: '#e07a5f', hp: 1, value: 100, bricks: TEXTS.bricks.professions },
+    { style: 'browser', color: '#f4a261', hp: 1, value: 30, bricks: TEXTS.bricks.services },
+    { style: 'paper', color: '#f2cc8f', hp: 1, value: 10, bricks: TEXTS.bricks.small }
 ];
 
 const CROWD = ['🧑', '👩', '👨', '👵', '👴', '🧔', '👧', '👦', '👱', '🧓'];
 
-const BOSS_LINES = [
-    'отток клиентов',
-    'спрос оптимизирован',
-    'клиенты сокращены',
-    'клиентов заменили агенты',
-    'бюджеты урезаны',
-    'продавать некому'
-];
+// Враги ИИ‑КОРП. Попал в риск — раунд проигран. Список — в texts.js (TEXTS.risks).
+const ENEMIES = TEXTS.risks;
 
-// Враги ИИ‑КОРП. Попал в риск — раунд проигран.
-const ENEMIES = [
-    { emoji: '🐌', label: 'Реальность', reason: 'Нейросеть столкнулась с реальностью' },
-    { emoji: '🕵️', label: 'SEC', reason: 'SEC заинтересовалась бухгалтерией' },
-    { emoji: '👨‍⚖️', label: 'Суд', reason: 'Суд: учиться на чужих книгах нельзя' },
-    { emoji: '🏛️', label: 'Регулятор', reason: 'Регулятор принял ещё один закон об ИИ' },
-    { emoji: '🧮', label: 'Проверка в Lean', reason: 'Lean нашёл расхождения текстов' },
-    { emoji: '📰', label: 'Журналист', reason: 'Журналист досмотрел демо без ускорения' },
-    { emoji: '🔌', label: 'Счёт за свет', reason: 'Дата‑центру выставили счёт за электричество' },
-    { emoji: '🖼️', label: 'Художник с иском', reason: 'Художник нашёл свои картины в датасете' }
-];
+// Подставляет значения в шаблон из texts.js: fill('Раунд {round}', { round: 'B' }) → 'Раунд B'
+function fill(template, vars) {
+    return template.replace(/\{(\w+)\}/g, (match, key) => (key in vars ? vars[key] : match));
+}
 
-const BALL_LOST = [
-    'Нейросеть сгаллюцинировала',
-    'Кончились данные для обучения',
-    'Дата‑центру не хватило электричества',
-    'Модель ответила: «Я не могу с этим помочь»',
-    'Нейросеть уверенно промахнулась'
-];
+// То же для экранов: значения выделяются жирным (span внутри .score-board)
+function fillElement(el, template, vars) {
+    el.textContent = '';
+    for (const part of template.split(/(\{\w+\})/)) {
+        const m = /^\{(\w+)\}$/.exec(part);
+        if (m && m[1] in vars) {
+            const span = document.createElement('span');
+            span.textContent = vars[m[1]];
+            el.appendChild(span);
+        } else if (part) {
+            el.appendChild(document.createTextNode(part));
+        }
+    }
+}
 
-const GAME_OVER_REASONS = [
-    'Инвесторы ушли в следующий хайп',
-    'Деньги кончились раньше, чем мир',
-    'Мир оказался прочнее презентации',
-    'Человечество пока справляется само'
-];
+// Тексты экранов: элементы с data-text="ключ" получают TEXTS.ui[ключ]
+function applyUiTexts() {
+    document.title = TEXTS.ui.pageTitle;
+    document.querySelectorAll('[data-text]').forEach((el) => {
+        el.textContent = TEXTS.ui[el.dataset.text];
+    });
+}
 
 // --- STATE ---
 
@@ -197,9 +148,9 @@ function formatCap(v) {
     if (v >= 1000) {
         const t = v / 1000;
         const str = t >= 10 ? String(Math.round(t)) : t.toFixed(1).replace('.', ',').replace(/,0$/, '');
-        return '$' + str + ' трлн';
+        return '$' + str + ' ' + TEXTS.game.trillion;
     }
-    return '$' + Math.round(v) + ' млрд';
+    return '$' + Math.round(v) + ' ' + TEXTS.game.billion;
 }
 
 function loadBest() {
@@ -497,7 +448,9 @@ function updateBallSpeed() {
 
 function updateHud() {
     hudCapEl.innerText = formatCap(score);
-    hudRoundEl.innerText = isMonopoly ? 'Монополия' : 'Раунд ' + ROUNDS[Math.min(round, ROUNDS.length - 1)];
+    hudRoundEl.innerText = isMonopoly
+        ? TEXTS.ui.hudMonopoly
+        : fill(TEXTS.ui.hudRound, { round: ROUNDS[Math.min(round, ROUNDS.length - 1)] });
 }
 
 function placeBallOnPaddle() {
@@ -552,7 +505,7 @@ function spawnEnemy() {
 
     if (!risksAnnounced) {
         risksAnnounced = true;
-        addPopup(W / 2, zone.top - 6, 'у ИИ‑КОРП появились риски');
+        addPopup(W / 2, zone.top - 6, TEXTS.game.risksAppeared);
     }
 }
 
@@ -652,7 +605,7 @@ function updateSanta(dt) {
         santaTimer -= dt;
         const canFly = gameState === 'START' || gameState === 'SERVE' || gameState === 'PLAYING';
         if (santaTimer <= 0 && canFly) {
-            santa = makeSanta(pick(SANTA_LINES));
+            santa = makeSanta(pick(TEXTS.santaBanners));
             santaTimer = 1500 + Math.random() * 1200; // следующий через 25–45 секунд
             sfxSleigh();
         }
@@ -764,8 +717,8 @@ function loseBall(reason) {
     const bonus = 100 * round;
     addScore(bonus);
     message = {
-        title: reason || pick(BALL_LOST),
-        text: `Инвесторы дали ещё денег. Раунд ${ROUNDS[round]}: оценка +${formatCap(bonus)}`
+        title: reason || pick(TEXTS.ballLost),
+        text: fill(TEXTS.game.newRound, { round: ROUNDS[round], bonus: formatCap(bonus) })
     };
     sfxSadTrombone();
     gameState = 'SERVE';
@@ -780,11 +733,13 @@ function gameOver(reason) {
     saveBest();
 
     const destroyed = bricks.filter((b) => !b.alive).length;
-    document.getElementById('death-reason').innerText = reason || pick(GAME_OVER_REASONS);
-    document.getElementById('final-destroyed').innerText = destroyed;
-    document.getElementById('final-total').innerText = bricks.length;
-    document.getElementById('final-score').innerText = formatCap(score);
-    document.getElementById('best-score').innerText = formatCap(bestScore);
+    document.getElementById('death-reason').innerText = reason || pick(TEXTS.gameOverReasons);
+    fillElement(document.getElementById('final-destroyed'), TEXTS.ui.gameOverDestroyed, {
+        destroyed: destroyed,
+        total: bricks.length
+    });
+    fillElement(document.getElementById('final-score'), TEXTS.ui.gameOverCap, { cap: formatCap(score) });
+    fillElement(document.getElementById('best-score'), TEXTS.ui.gameOverBest, { best: formatCap(bestScore) });
 
     hudEl.classList.add('hidden');
     gameOverScreen.classList.remove('hidden');
@@ -805,10 +760,10 @@ function gameWin() {
     sfxWin();
 
     // Финальный пролёт Санты
-    santa = makeSanta('Дарить подарки тоже некому');
+    santa = makeSanta(TEXTS.game.winSantaBanner);
     sfxSleigh();
 
-    document.getElementById('win-score').innerText = formatCap(score);
+    fillElement(document.getElementById('win-score'), TEXTS.ui.winCap, { cap: formatCap(score) });
     hudEl.classList.add('hidden');
     winScreen.classList.remove('hidden');
 }
@@ -821,7 +776,7 @@ function hitBrick(b) {
         const now = Date.now();
         if (now - lastProtectedPopup > 1500) {
             lastProtectedPopup = now;
-            addPopup(ball.x, b.y + b.h + 16, 'клиенты пока нужны');
+            addPopup(ball.x, b.y + b.h + 16, TEXTS.game.bossProtected);
         }
         return;
     }
@@ -835,7 +790,8 @@ function hitBrick(b) {
     setMusicIntensity(hitsDone / totalHits);
 
     if (b.boss) {
-        const line = BOSS_LINES[Math.min(b.maxHp - b.hp - 1, BOSS_LINES.length - 1)];
+        const lines = TEXTS.bossLines;
+        const line = lines[Math.min(b.maxHp - b.hp - 1, lines.length - 1)];
         addPopup(ball.x, b.y + b.h + 18, line, '+' + formatCap(b.value));
         addCrack(b);
         shake = 8;
@@ -869,7 +825,7 @@ function destroyBrick(b) {
     if (!isBossProtected()) {
         const boss = bricks.find((x) => x.boss && x.alive);
         if (boss) {
-            addPopup(W / 2, boss.y + boss.h + 40, 'новая цель: клиенты');
+            addPopup(W / 2, boss.y + boss.h + 40, TEXTS.game.bossTarget);
             sfxAlert();
         }
     }
@@ -1073,7 +1029,7 @@ function drawChart() {
     if (labelY > zoneTop && labelY - 14 < zoneBottom) {
         labelY = zoneBottom + 18 <= H - 2 ? zoneBottom + 18 : zoneTop - 2;
     }
-    ctx.fillText(`ИИКОРП ▲ ${formatCap(score)}`, labelX, labelY);
+    ctx.fillText(fill(TEXTS.game.chartLabel, { cap: formatCap(score) }), labelX, labelY);
 }
 
 // Внешний вид блока рисуется один раз в отдельный холст и перерисовывается только
@@ -1312,8 +1268,8 @@ function drawEnemies() {
         ctx.strokeText(e.type.label, labelX, e.y + ring + 10);
         ctx.fillText(e.type.label, labelX, e.y + ring + 10);
         if (warming) {
-            ctx.strokeText('⚠ РИСК', labelX, e.y - ring - 10);
-            ctx.fillText('⚠ РИСК', labelX, e.y - ring - 10);
+            ctx.strokeText(TEXTS.game.riskWarning, labelX, e.y - ring - 10);
+            ctx.fillText(TEXTS.game.riskWarning, labelX, e.y - ring - 10);
         }
     }
     ctx.globalAlpha = 1;
@@ -1326,7 +1282,8 @@ function drawPaddle() {
     ctx.font = `700 11px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(isMonopoly ? 'ИИ‑КОРП · МОНОПОЛИЯ' : 'ИИ‑КОРП', paddle.x + paddle.w / 2, paddle.y + paddle.h / 2 + 1);
+    const label = isMonopoly ? TEXTS.game.paddleMonopoly : TEXTS.game.paddle;
+    ctx.fillText(label, paddle.x + paddle.w / 2, paddle.y + paddle.h / 2 + 1, paddle.w - 6);
 }
 
 function drawBall() {
@@ -1395,7 +1352,7 @@ function drawServeText() {
     ctx.globalAlpha = 0.6 + 0.4 * Math.sin(performance.now() / 300);
     ctx.font = `400 13px ${FONT}`;
     ctx.fillStyle = COLORS.muted;
-    ctx.fillText('Тап или пробел — запустить нейросеть', W / 2, paddle.y - 40);
+    ctx.fillText(TEXTS.game.serveHint, W / 2, paddle.y - 40, W - 20);
     ctx.globalAlpha = 1;
 }
 
@@ -1517,8 +1474,8 @@ titleEl.addEventListener('pointerdown', (e) => {
         isMonopoly = !isMonopoly;
         layout(W, H);
         cheatNoteEl.innerText = isMonopoly
-            ? 'Режим монополии включён. Антимонопольная служба распущена, рисков больше нет.'
-            : 'Режим монополии выключен. Конкуренция и риски вернулись.';
+            ? TEXTS.ui.cheatOn
+            : TEXTS.ui.cheatOff;
         cheatNoteEl.classList.remove('hidden');
     }
 });
@@ -1527,6 +1484,7 @@ window.addEventListener('resize', resize);
 
 // --- START ---
 
+applyUiTexts();
 buildBricks();
 resize();
 paddle.x = (W - paddle.w) / 2;

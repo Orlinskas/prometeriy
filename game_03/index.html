@@ -10,51 +10,53 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Все надписи подставляются из texts.js: data-text="ключ" → TEXTS.ui[ключ] -->
     <div class="container">
         <canvas id="gameCanvas"></canvas>
 
         <div id="ui-layer">
             <div id="hud" class="hidden">
                 <div>
-                    <span class="hud-label">капитализация</span>
-                    <span id="hud-cap">$1 млрд</span>
+                    <span class="hud-label" data-text="hudCapLabel"></span>
+                    <span id="hud-cap"></span>
                 </div>
                 <div class="hud-right">
-                    <span class="hud-label">инвестиции</span>
-                    <span id="hud-round">Раунд A</span>
+                    <span class="hud-label" data-text="hudRoundLabel"></span>
+                    <span id="hud-round"></span>
                 </div>
             </div>
 
             <div id="start-screen" class="screen">
-                <h1 id="title">ДИЗРАПТ</h1>
-                <p class="subtitle">ИИ‑КОРП. Миссия: благо всего человечества</p>
-                <p class="controls">Двигай платформу пальцем, мышью или стрелками.<br>Тап или пробел — запустить нейросеть.<br>Не попадай в риски — они появятся позже.</p>
-                <button id="start-btn" class="btn">Начать дизрапт</button>
+                <h1 id="title" data-text="startTitle"></h1>
+                <p class="subtitle" data-text="startSubtitle"></p>
+                <p class="controls" data-text="startControls"></p>
+                <button id="start-btn" class="btn" data-text="startButton"></button>
                 <p id="cheat-note" class="cheat hidden"></p>
             </div>
 
             <div id="game-over-screen" class="screen hidden">
-                <h1 class="error-text">ПУЗЫРЬ ЛОПНУЛ</h1>
-                <p id="death-reason">Инвесторы ушли в следующий хайп</p>
+                <h1 class="error-text" data-text="gameOverTitle"></h1>
+                <p id="death-reason"></p>
                 <div class="score-board">
-                    <p>Разрушено: <span id="final-destroyed">0</span> из <span id="final-total">0</span></p>
-                    <p>Капитализация: <span id="final-score">$0</span></p>
-                    <p>Рекорд: <span id="best-score">$0</span></p>
+                    <p id="final-destroyed"></p>
+                    <p id="final-score"></p>
+                    <p id="best-score"></p>
                 </div>
-                <button id="restart-btn" class="btn">Новый раунд</button>
+                <button id="restart-btn" class="btn" data-text="gameOverButton"></button>
             </div>
 
             <div id="win-screen" class="screen hidden">
-                <h1 class="success-text">МИР ДИЗРАПТНУТ</h1>
-                <p class="subtitle">Профессии, интернет и правда оптимизированы. Продавать больше некому.</p>
+                <h1 class="success-text" data-text="winTitle"></h1>
+                <p class="subtitle" data-text="winSubtitle"></p>
                 <div class="score-board">
-                    <p>Капитализация: <span id="win-score">$0</span></p>
+                    <p id="win-score"></p>
                 </div>
-                <p class="gift">🎁 Для игрока есть подарок, сделай скриншот и напиши в редакцию!</p>
-                <button id="win-restart-btn" class="btn">Найти новый мир</button>
+                <p class="gift" data-text="winGift"></p>
+                <button id="win-restart-btn" class="btn" data-text="winButton"></button>
             </div>
         </div>
     </div>
+    <script src="texts.js"></script>
     <script src="audio.js"></script>
     <script src="script.js"></script>
 </body>

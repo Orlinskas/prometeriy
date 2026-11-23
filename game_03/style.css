@@ -75,6 +75,11 @@ canvas {
     display: none !important;
 }
 
+/* Тексты из texts.js: \n превращается в перенос строки */
+[data-text] {
+    white-space: pre-line;
+}
+
 h1 {
     font-size: 2.2rem;
     font-weight: 700;
